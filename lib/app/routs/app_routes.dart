@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:interprise_calendar/app/modules/agendamento_services_module/bindings/agendamentos_bindings.dart';
-import 'package:interprise_calendar/app/modules/agendamento_services_module/views/login_view.dart';
+import 'package:interprise_calendar/app/modules/job_module/bindings/job_bindings.dart';
+import 'package:interprise_calendar/app/modules/job_module/views/login_view.dart';
 
 class AppRoutes {
   static const String initialRoute = '/login';

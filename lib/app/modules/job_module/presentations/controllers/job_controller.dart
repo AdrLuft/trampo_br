@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
-import 'package:interprise_calendar/app/modules/agendamento_services_module/aplications/usecases/agendamento_usecases/criar_agendamentos_usecases.dart';
-import 'package:interprise_calendar/app/modules/agendamento_services_module/aplications/usecases/agendamento_usecases/listar_agendamentos_usecases.dart';
+import 'package:interprise_calendar/app/modules/job_module/aplications/usecases/agendamento_usecases/job_creater_usecases.dart';
+import 'package:interprise_calendar/app/modules/job_module/aplications/usecases/agendamento_usecases/job_listner_usecases.dart';
 
 class AgendamentoController extends GetxController {
   late final CriarAgendamentosUsecases _criarAgendamentosUsecases;

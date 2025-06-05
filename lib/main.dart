@@ -1,43 +1,40 @@
-// lib/main.dart
+// import 'app/services/notification_service.dart'; // Se você tiver este serviço [cite: 2]
+import 'package:flutter/material.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:interprise_calendar/app/modules/job_module/bindings/job_bindings.dart';
+import 'package:interprise_calendar/app/routs/app_routes.dart';
 
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:firebase_core/firebase_core.dart'; // [cite: 3]
-// import 'firebase_options.dart'; // Certifique-se que este arquivo existe (gerado pelo FlutterFire CLI)
-// import 'presentation/routs/app_routes.dart';
+void main() async {
+  // WidgetsFlutterBinding.ensureInitialized(); // [cite: 2]
+  // // Inicializar Firebase [cite: 3]
+  // await Firebase.initializeApp(
+  // options: DefaultFirebaseOptions.currentPlatform, // [cite: 3]
+  // );
+  // // Inicializar outros serviços se necessário, como NotificationService [cite: 2]
+  // final notificationService = NotificationService();
+  // await notificationService.init();
+  // Get.put(notificationService, permanent: true); [cite: 2]
+  // Get.put(HabitController(), permanent: true); // Exemplo do seu PDF, adapte ou remova [cite: 2]
+  runApp(const TrampoBR());
+}
 
-// import 'app/bindings/app_bindings.dart';
-// // import 'app/services/notification_service.dart'; // Se você tiver este serviço [cite: 2]
-// void main() async {
-// WidgetsFlutterBinding.ensureInitialized(); // [cite: 2]
-// // Inicializar Firebase [cite: 3]
-// await Firebase.initializeApp(
-// options: DefaultFirebaseOptions.currentPlatform, // [cite: 3]
-// );
-// // Inicializar outros serviços se necessário, como NotificationService [cite: 2]
-// // final notificationService = NotificationService();
-// // await notificationService.init();
-// // Get.put(notificationService, permanent: true); [cite: 2]
-// // Get.put(HabitController(), permanent: true); // Exemplo do seu PDF, adapte ou remova [cite: 2]
-// runApp(const AgendaProApp());
-// }
-// class AgendaProApp extends StatelessWidget {
-// const AgendaProApp({super.key});
-// @override
-// Widget build(BuildContext context) {
-// return GetMaterialApp(
-// title: 'AgendaPro App', // Ajustado do MVC App [cite: 2]
-// debugShowCheckedModeBanner: false,
-// theme: ThemeData(
-// primarySwatch: Colors.teal, // [cite: 2]
-// visualDensity: VisualDensity.adaptivePlatformDensity, // [cite: 2]
-// colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.teal).copyWith(secondary:
-// Colors.amber),
-// ),
-// initialRoute: AppRoutes.initialRoute, // [cite: 2]
-// getPages: AppRoutes.routes,
-// initialBinding: AppBindings(), // [cite: 2]
-// unknownRoute: AppRoutes.unknownRoute, // [cite: 2]
-// );
-// }
-// }
+class TrampoBR extends StatelessWidget {
+  const TrampoBR({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
+      title: 'Trampo BR',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: Colors.teal,
+        ).copyWith(secondary: Colors.amber),
+      ),
+      initialRoute: AppRoutes.initialRoute,
+      getPages: AppRoutes.routes,
+      initialBinding: AppBindings(),
+    );
+  }
+}

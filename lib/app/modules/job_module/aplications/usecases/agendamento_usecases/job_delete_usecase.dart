@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:interprise_calendar/app/modules/agendamento_services_module/domain/repositories/agendamento_repository_abstract.dart';
+import 'package:interprise_calendar/app/modules/job_module/domain/repositories/agendamento_repository_abstract.dart';
 
 class DeleteAgendamentoUsecase {
   final AgendamentoRepositoryAbstract _repository;

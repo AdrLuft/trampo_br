@@ -1,4 +1,4 @@
-import 'package:interprise_calendar/app/modules/agendamento_services_module/domain/entities/agendamento_entiti.dart';
+import 'package:interprise_calendar/app/modules/job_module/domain/entities/agendamento_entiti.dart';
 
 abstract class AgendamentoRepositoryAbstract {
   Future<void> createAgendamento(AgendamentoEntiti agendamento);
