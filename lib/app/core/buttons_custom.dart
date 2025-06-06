@@ -62,11 +62,10 @@ class CustomButtons extends StatelessWidget {
 
 /*
 como usar os custombuttons
-    child: CustomButton(
+    child: CustomButtons(
             text: 'Entrar',
             onPressed: () {
               print('Botão Entrar pressionado!');
   
             },
-
  */
