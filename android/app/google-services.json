@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "800171431254",
+    "project_id": "trampo-br-94c86",
+    "storage_bucket": "trampo-br-94c86.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800171431254:android:5ab029efc93ac3c12db2f7",
+        "android_client_info": {
+          "package_name": "com.example.interprise_calendar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBIbzNGXIkGWl1R24B-_GglZlCcjbRNNc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
