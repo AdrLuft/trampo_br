@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:interprise_calendar/app/modules/job_module/domain/entities/agendamento_entiti.dart';
-import 'package:interprise_calendar/app/modules/job_module/domain/repositories/agendamento_repository_abstract.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/agendamento_entiti.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/agendamento_repository_abstract.dart';
 
 class ListarAgendamentosUsecases {
   final AgendamentoRepositoryAbstract _repository;

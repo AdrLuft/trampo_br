@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:interprise_calendar/app/core/enums/login_enum.dart';
 
 class LoginRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -11,9 +12,23 @@ class LoginRepository {
     return userCredential.user;
   }
 
-  Future<User> register(String email, String password) async {
+  Future<User> register({
+    required String email,
+    required String password,
+    required UserType userType,
+    required String name,
+  }) async {
     UserCredential userCredential = await _firebaseAuth
         .createUserWithEmailAndPassword(email: email, password: password);
+
+    await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      'email': email,
+      'name': name,
+      'userType': userType.name,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
     return userCredential.user!;
   }
 

@@ -6,7 +6,7 @@ import 'package:interprise_calendar/app/routs/app_routes.dart';
 import 'package:interprise_calendar/firebase_options.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // <- ESSENCIAL!
+  WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -28,7 +28,7 @@ class TrampoBR extends StatelessWidget {
           primarySwatch: Colors.teal,
         ).copyWith(secondary: Colors.amber),
       ),
-      initialRoute: AppRoutes.initialRoute,
+      initialRoute: AppRoutes.login,
       getPages: AppRoutes.routes,
       initialBinding: LoginBindings(),
     );
