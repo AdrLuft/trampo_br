@@ -2,11 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/agendamento_entiti.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/agendamento_repository_abstract.dart';
 
-class CriarAgendamentosUsecases {
+class CriarJobsUsecasesPessoaFisica {
   final AgendamentoRepositoryAbstract _repository;
   FirebaseAuth auth = FirebaseAuth.instance;
 
-  CriarAgendamentosUsecases(this._repository, this.auth);
+  CriarJobsUsecasesPessoaFisica(this._repository, this.auth);
 
   Future<String> call(AgendamentoEntiti agendamento) async {
     final String userId = auth.currentUser?.uid ?? '';
