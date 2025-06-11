@@ -39,6 +39,7 @@
 //   }
 // }
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -46,11 +47,13 @@ import 'package:interprise_calendar/app/core/configs/global_themes/app_theme.dar
 import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
 import 'package:interprise_calendar/app/login/bindings/login_bindings.dart';
 import 'package:interprise_calendar/app/routs/app_routes.dart';
-import '../firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
+
+  // Configurar locale para Firebase
+  FirebaseAuth.instance.setLanguageCode('pt-BR');
 
   // Inicializa o controller e espera ele carregar o tema salvo
   await Get.putAsync(() async => GlobalThemeController());

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:cpf_cnpj_validator/cpf_validator.dart';
 import 'package:cpf_cnpj_validator/cnpj_validator.dart';
-import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
 import 'package:interprise_calendar/app/core/enums/login_enum.dart';
 import 'package:interprise_calendar/app/login/presentations/login_controller.dart';
 
@@ -21,8 +20,6 @@ class _LoginViewState extends State<LoginView> {
   final _confirmPasswordController = TextEditingController();
   final _documentController = TextEditingController();
   final _nameController = TextEditingController();
-  final GlobalThemeController _themeController =
-      Get.find<GlobalThemeController>();
   bool _isLoginMode = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;

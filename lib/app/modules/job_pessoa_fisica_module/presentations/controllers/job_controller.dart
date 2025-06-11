@@ -47,17 +47,4 @@ class JobPessoaFisicaController extends GetxController {
   Future<void> toggleTheme() async {
     await themeController.toggleTheme();
   }
-
-  Future<void> logout() async {
-    try {
-      isLoading.value = true;
-      await _auth.signOut();
-      await Future.delayed(Duration(seconds: 1));
-      Get.toNamed('/login');
-    } catch (e) {
-      return Future.error('Erro ao fazer logout: $e');
-    } finally {
-      isLoading.value = false;
-    }
-  }
 }
