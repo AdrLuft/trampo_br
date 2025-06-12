@@ -17,6 +17,8 @@ class LoginRepository {
     required String password,
     required UserType userType,
     required String name,
+    required String document,
+    required String address,
   }) async {
     UserCredential userCredential = await _firebaseAuth
         .createUserWithEmailAndPassword(email: email, password: password);
@@ -26,7 +28,8 @@ class LoginRepository {
       'name': name,
       'userType': userType.name,
       'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      'address': address,
+      'document': document,
     });
 
     return userCredential.user!;

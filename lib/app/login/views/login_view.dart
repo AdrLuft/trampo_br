@@ -20,6 +20,7 @@ class _LoginViewState extends State<LoginView> {
   final _confirmPasswordController = TextEditingController();
   final _documentController = TextEditingController();
   final _nameController = TextEditingController();
+  final _addressController = TextEditingController(); // Novo campo
   bool _isLoginMode = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -34,6 +35,7 @@ class _LoginViewState extends State<LoginView> {
     _confirmPasswordController.dispose();
     _documentController.dispose();
     _nameController.dispose();
+    _addressController.dispose(); // Dispose do novo campo
     super.dispose();
   }
 
@@ -58,8 +60,16 @@ class _LoginViewState extends State<LoginView> {
           userType: _selectedUserType,
           document: _documentController.text,
           name: _nameController.text,
+          address: _addressController.text, // Incluir endereço
         );
-        Get.snackbar('Sucesso', 'Cadastro realizado com sucesso!');
+        Get.snackbar(
+          'Sucesso',
+          'Cadastro realizado com sucesso!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withValues(alpha: 0.8),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 1),
+        );
         setState(() {
           _isLoginMode = true;
         });
@@ -91,6 +101,7 @@ class _LoginViewState extends State<LoginView> {
               color: Colors.black.withValues(alpha: 0.1),
             ),
           ),
+
           // Conteúdo principal
           SafeArea(
             child: SingleChildScrollView(
@@ -100,63 +111,60 @@ class _LoginViewState extends State<LoginView> {
                 children: [
                   SizedBox(height: _isLoginMode ? 40 : 20),
 
-                  // Logo ajustável por modo
-                  Container(
-                    width: _isLoginMode ? 120 : 80,
-                    height: _isLoginMode ? 120 : 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(
-                        _isLoginMode ? 60 : 40,
+                  // Logo apenas no modo login
+                  if (_isLoginMode) ...[
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(60),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                            spreadRadius: 2,
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, -5),
+                            spreadRadius: -5,
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: _isLoginMode ? 20 : 15,
-                          offset: Offset(0, _isLoginMode ? 10 : 5),
-                          spreadRadius: 2,
-                        ),
-                        BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          blurRadius: _isLoginMode ? 20 : 15,
-                          offset: const Offset(0, -5),
-                          spreadRadius: -5,
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        _isLoginMode ? 60 : 40,
-                      ),
-                      child: Image.asset(
-                        'assets/images/trampos2.png',
-                        width: _isLoginMode ? 100 : 70,
-                        height: _isLoginMode ? 100 : 70,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.teal.shade400,
-                                  Colors.teal.shade600,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(60),
+                        child: Image.asset(
+                          'assets/images/trampos2.png',
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.teal.shade400,
+                                    Colors.teal.shade600,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                               ),
-                            ),
-                            child: Icon(
-                              Icons.work_rounded,
-                              size: _isLoginMode ? 60 : 40,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
+                              child: const Icon(
+                                Icons.work_rounded,
+                                size: 60,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
-
-                  SizedBox(height: _isLoginMode ? 10 : 8),
+                    const SizedBox(height: 10),
+                  ],
 
                   Text(
                     'Trampos BR',
@@ -304,6 +312,31 @@ class _LoginViewState extends State<LoginView> {
                                   if (!CNPJValidator.isValid(value)) {
                                     return 'CNPJ inválido';
                                   }
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          SizedBox(height: _isLoginMode ? 25 : 16),
+
+                          // Campo de Endereço (novo)
+                          _buildFormField(
+                            child: TextFormField(
+                              controller: _addressController,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              decoration: _getInputDecoration(
+                                'Endereço',
+                                Icons.location_on,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Digite seu endereço';
+                                }
+                                if (value.length < 10) {
+                                  return 'Endereço deve ter pelo menos 10 caracteres';
                                 }
                                 return null;
                               },

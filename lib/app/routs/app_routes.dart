@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/login/bindings/login_bindings.dart';
 import 'package:interprise_calendar/app/login/views/login_view.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/bindings/jobs_create_lister_bindings.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/bindings/trampos_bindings.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/view/home_view_pessoa_fisica.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/mensagens_page/mensagens_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/perfi_page/perfil_page_helper.dart';

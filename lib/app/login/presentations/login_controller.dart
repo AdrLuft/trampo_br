@@ -66,7 +66,8 @@ class LoginController extends GetxController {
     required String password,
     required UserType userType,
     required String name,
-    String? document,
+    required String document,
+    required String address,
   }) async {
     isLoading.value = true;
     try {
@@ -75,6 +76,8 @@ class LoginController extends GetxController {
         password: password,
         userType: userType,
         name: name,
+        document: document,
+        address: address,
       );
     } on FirebaseException catch (e) {
       throw ('Erro ao registrar: $e');

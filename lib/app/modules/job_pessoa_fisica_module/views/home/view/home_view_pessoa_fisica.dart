@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/job_controller.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/settings_view_controller_pessoa_fisica.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/dialogs_home_view_pessoa_fisica.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_page.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/trampos_salvos_page/salvos_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_page_helper.dart';
 
@@ -14,9 +16,10 @@ class HomeViewPessoaFisica extends StatefulWidget {
 
 class _HomeViewState extends State<HomeViewPessoaFisica> {
   int _selectedIndex = 0;
-  final JobPessoaFisicaController _controller = Get.find();
+  final TramposController _controller = Get.find();
   final SettingsHomePagePessoaFisicaController _settingsController =
       SettingsHomePagePessoaFisicaController();
+  // final DialogsHomeViewPessoaFisica _dialogsHelper = DialogsHomeViewPessoaFisica();
   @override
   void initState() {
     super.initState();
@@ -28,14 +31,13 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
     });
   }
 
-  // Lista de páginas para cada aba (apenas 3 agora)
+  // Lista de páginas para cada aba
   List<Widget> get _pages => [
     _InicioPage(onNavigateToTab: _onItemTapped),
     const VagasPage(),
     const SalvosPage(),
+    const CriarPage(),
   ];
-
-  // Método para navegar para páginas que não estão na bottom navigation
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +56,12 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
             icon: const Icon(Icons.notifications, color: Colors.white),
             onPressed: () {
               // Ação de notificações
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.chat),
+            onPressed: () {
+              Get.toNamed('/mensagens');
             },
           ),
         ],
@@ -79,6 +87,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Vagas'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Salvos'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Criar'),
         ],
       ),
     );
@@ -86,11 +95,14 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
 
   Widget _buildDrawer() {
     return Drawer(
+      width: 269,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           // Header do Drawer
           Container(
-            height: 200,
+            height: 220,
+            width: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Colors.teal.shade400, Colors.teal.shade600],
@@ -104,15 +116,15 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 120,
+                    height: 75,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(40),
+                      borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
+                          color: Colors.black.withValues(alpha: 0.9),
+                          blurRadius: 70,
                           offset: const Offset(0, 5),
                         ),
                       ],
@@ -154,30 +166,6 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                     Get.toNamed('/perfil');
                   },
                 ),
-                _buildDrawerItem(
-                  icon: Icons.chat,
-                  title: 'Mensagens',
-                  onTap: () {
-                    Get.back();
-                    Get.toNamed('/mensagens');
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.work,
-                  title: 'Vagas',
-                  onTap: () {
-                    Get.back();
-                    Get.toNamed('/vagas');
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.bookmark,
-                  title: 'Trampos Salvos',
-                  onTap: () {
-                    Get.back();
-                    Get.toNamed('/trampos-salvos');
-                  },
-                ),
                 const Divider(),
                 _buildDrawerItem(
                   icon: Icons.palette,
@@ -185,12 +173,6 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                   onTap: () async {
                     Get.back();
                     await _controller.toggleTheme();
-                    Get.snackbar(
-                      'Tema',
-                      'Tema alterado com sucesso!',
-                      backgroundColor: Colors.teal,
-                      colorText: Colors.white,
-                    );
                   },
                 ),
                 _buildDrawerItem(
@@ -198,7 +180,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                   title: 'Alterar Senha',
                   onTap: () {
                     Get.back();
-                    _showChangePasswordDialog();
+                    DialogsHomeViewPessoaFisica.showChangePasswordDialog();
                   },
                 ),
                 _buildDrawerItem(
@@ -206,7 +188,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                   title: 'Notificações',
                   onTap: () {
                     Get.back();
-                    _showNotificationsSettings();
+                    DialogsHomeViewPessoaFisica.showNotificationsSettings();
                   },
                 ),
                 _buildDrawerItem(
@@ -214,7 +196,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                   title: 'Privacidade e Segurança',
                   onTap: () {
                     Get.back();
-                    _showPrivacySettings();
+                    DialogsHomeViewPessoaFisica.showPrivacySettings();
                   },
                 ),
                 const Divider(),
@@ -223,7 +205,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                   title: 'Excluir Conta',
                   onTap: () {
                     Get.back();
-                    _showDeleteAccountDialog();
+                    DialogsHomeViewPessoaFisica.showDeleteAccountDialog();
                   },
                   textColor: Colors.red,
                 ),
@@ -232,7 +214,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                   title: 'Sair do App',
                   onTap: () {
                     Get.back();
-                    _showLogoutDialog();
+                    _settingsController.logout();
                   },
                   textColor: Colors.red,
                 ),
@@ -250,198 +232,22 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
     required VoidCallback onTap,
     Color? textColor,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ListTile(
-      leading: Icon(icon, color: textColor ?? Colors.grey.shade700),
+      leading: Icon(
+        icon,
+        color: textColor ?? (isDark ? Colors.white : Colors.grey.shade700),
+      ),
       title: Text(
         title,
         style: TextStyle(
-          color: textColor ?? Colors.grey.shade800,
+          color: textColor ?? (isDark ? Colors.white : Colors.grey.shade800),
           fontWeight: FontWeight.w500,
         ),
       ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-    );
-  }
-
-  void _showChangePasswordDialog() {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Alterar Senha'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Senha Atual',
-                prefixIcon: Icon(Icons.lock_outline),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Nova Senha',
-                prefixIcon: Icon(Icons.lock),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirmar Nova Senha',
-                prefixIcon: Icon(Icons.lock),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Implementar lógica de alteração de senha
-              Get.back();
-              Get.snackbar(
-                'Senha',
-                'Senha alterada com sucesso!',
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-              );
-            },
-            child: const Text('Alterar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showNotificationsSettings() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Configurações de Notificações'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SwitchListTile(
-              title: const Text('Notificações de Vagas'),
-              value: true,
-              onChanged: (value) {},
-            ),
-            SwitchListTile(
-              title: const Text('Notificações de Mensagens'),
-              value: true,
-              onChanged: (value) {},
-            ),
-            SwitchListTile(
-              title: const Text('Notificações Push'),
-              value: false,
-              onChanged: (value) {},
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Fechar')),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacySettings() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Privacidade e Segurança'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.visibility),
-              title: const Text('Perfil Público'),
-              trailing: Switch(value: true, onChanged: (value) {}),
-            ),
-            ListTile(
-              leading: const Icon(Icons.location_on),
-              title: const Text('Compartilhar Localização'),
-              trailing: Switch(value: false, onChanged: (value) {}),
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Histórico de Atividades'),
-              onTap: () {
-                Get.back();
-                // Navegar para histórico
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Fechar')),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Excluir Conta'),
-        content: const Text(
-          'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Get.back();
-              // Implementar lógica de exclusão de conta
-              Get.snackbar(
-                'Conta',
-                'Funcionalidade em desenvolvimento',
-                backgroundColor: Colors.orange,
-                colorText: Colors.white,
-              );
-            },
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLogoutDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Sair do App'),
-        content: const Text('Tem certeza que deseja sair?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Get.back();
-              _settingsController.logout();
-            },
-            child: const Text('Sair'),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -454,6 +260,8 @@ class _InicioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -500,100 +308,192 @@ class _InicioPage extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // Seção de ações rápidas
-          Center(
-            child: const Text(
-              'Ações Rápidas',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+          // Seção de Trampos Disponíveis
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Trampos Recentes',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              TextButton(
+                onPressed: () => onNavigateToTab(1),
+                child: Text(
+                  'Ver todos',
+                  style: TextStyle(
+                    color: Colors.teal.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
-          GridView.count(
-            crossAxisCount: 2,
+          // Lista de Trampos - Estrutura básica para futuro Firebase
+          ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            children: [
-              _buildActionCard(
-                'Buscar Trampos',
-                Icons.search,
-                Colors.blue,
-                () => onNavigateToTab(1), // Navega para aba Vagas
-              ),
-              _buildActionCard(
-                'Atualizar Perfil',
-                Icons.edit,
-                Colors.orange,
-                () {
-                  Get.toNamed('/perfil');
-                },
-              ),
-              _buildActionCard(
-                'Ver Salvos',
-                Icons.bookmark,
-                Colors.purple,
-                () => onNavigateToTab(2), // Navega para aba Salvos
-              ),
-              _buildActionCard('Mensagens', Icons.chat, Colors.green, () {
-                Get.toNamed('/mensagens');
-              }),
-            ],
+            itemCount: 3, // Temporário - virá do Firebase
+            itemBuilder: (context, index) {
+              return _buildTrampoCard(index);
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              // color: color.withOpacity(0.2),
-              color: Colors.white.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                //color: color.withOpacity(0.1),
-                color: Colors.black.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
+  Widget _buildTrampoCard(int index) {
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey.shade800 : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              child: Icon(icon, size: 32, color: color),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título da vaga
+                Text(
+                  'Trampo ${index + 1}', // Placeholder - virá do Firebase
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Empresa
+                Row(
+                  children: [
+                    Icon(
+                      Icons.business,
+                      size: 16,
+                      color: isDark ? Colors.white70 : Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Empresa Exemplo', // Placeholder - virá do Firebase
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white70 : Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+
+                // Localização
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: isDark ? Colors.white70 : Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'São Paulo, SP', // Placeholder - virá do Firebase
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white60 : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Descrição
+                Text(
+                  'Descrição da vaga será carregada do Firebase...', // Placeholder
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+
+                // Botões de ação
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        Get.snackbar(
+                          'Trampo Salvo',
+                          'Funcionalidade será implementada com Firebase',
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                          duration: const Duration(seconds: 2),
+                        );
+                      },
+                      icon: const Icon(Icons.bookmark_border, size: 18),
+                      label: const Text('Salvar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            isDark ? Colors.white70 : Colors.grey.shade600,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Get.snackbar(
+                          'Candidatura',
+                          'Funcionalidade será implementada com Firebase',
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                          duration: const Duration(seconds: 2),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Candidatar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
