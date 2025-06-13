@@ -16,4 +16,8 @@ class ListarTramposPessoaFisicaUsecases {
     final agendamentos = await _repository.getTrampos(userId);
     return agendamentos;
   }
+
+  Future<List<TramposEntiti>> getMinhasVagas() async {
+    return await _repository.getMiTrampos();
+  }
 }

@@ -35,6 +35,7 @@ class _CriarPageState extends State<CriarPage> {
 
   void _limparFormulario() {
     _descricaoController.clear();
+    _telefoneController.clear();
     setState(() {
       _tipoVagaSelecionado = null;
     });
@@ -312,9 +313,6 @@ class _CriarPageState extends State<CriarPage> {
                                       descricao: _descricaoController.text,
                                       tipoVaga: _tipoVagaSelecionado!,
                                       telefone: _telefoneController.text,
-                                      createTrampoNome: '',
-                                      email: '',
-                                      userAddress: '',
                                     );
                                     _limparFormulario();
                                   } else if (_tipoVagaSelecionado == null) {

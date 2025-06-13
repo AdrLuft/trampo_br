@@ -10,43 +10,65 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
 
   @override
   Future<TramposEntiti> createTrampo(TramposEntiti agendamento) async {
-    final String user = auth.currentUser?.uid ?? '';
+    try {
+      final String user = auth.currentUser?.uid ?? '';
 
-    DocumentSnapshot userDoc =
-        await firestore.collection('users').doc(user).get();
-    String userName = '';
+      if (user.isEmpty) {
+        throw Exception('Usuário não autenticado');
+      }
 
-    if (userDoc.exists) {
+      DocumentSnapshot userDoc =
+          await firestore.collection('users').doc(user).get();
+
+      if (!userDoc.exists) {
+        throw Exception('Dados do usuário não encontrados');
+      }
+
       Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-      userName = userData['name'] ?? '';
+      String userName = userData['name'] ?? '';
+      String userAddress = userData['address'] ?? '';
+      String userEmail = userData['email'] ?? agendamento.email;
+
+      CollectionReference tramposCollection = firestore.collection('Trampos');
+
+      DateTime createDateTime;
+      try {
+        createDateTime = DateTime.parse(agendamento.createDate);
+      } catch (e) {
+        createDateTime = DateTime.now();
+      }
+
+      final trampoData = {
+        'userId': firestore.doc('users/$user'),
+        'createTrampoNome': userName,
+        //'userName': userName,
+        'userAddress': userAddress,
+        'email': userEmail,
+        'telefone': agendamento.telefone,
+        'createDate': Timestamp.fromDate(createDateTime),
+        'tipoVaga': agendamento.tipoVaga,
+        'status': agendamento.status,
+        'descricao': agendamento.descricao.trim(),
+      };
+
+      DocumentReference docRef = await tramposCollection.add(trampoData);
+
+      final CreateTramposModel model = CreateTramposModel(
+        id: docRef.id,
+        createTrampoNome: userName,
+        createDate: agendamento.createDate,
+        status: agendamento.status,
+        tipoVaga: agendamento.tipoVaga,
+        email: userEmail,
+        telefone: agendamento.telefone,
+        userAddress: userAddress,
+        descricao: agendamento.descricao.trim(),
+      );
+
+      return model.toEntity();
+    } catch (e) {
+      rethrow;
     }
-
-    CollectionReference tramposCollection = firestore.collection('Trampos');
-
-    DocumentReference docRef = await tramposCollection.add({
-      'userId': firestore.doc('users/$user'),
-      'createTrampoNome': agendamento.createTrampoNome,
-      'userName': userName,
-      'userAddress': agendamento.userAddress,
-      'email': agendamento.email,
-      'telefone': agendamento.telefone,
-      'createDate': Timestamp.fromDate(agendamento.createDate as DateTime),
-      'tipoVaga': agendamento.tipoVaga,
-      'status': agendamento.status,
-      'descricao': agendamento.descricao.trim(),
-    });
-    final CreateTramposModel model = CreateTramposModel(
-      id: docRef.id,
-      createTrampoNome: agendamento.createTrampoNome,
-      createDate: agendamento.createDate.toString(),
-      status: agendamento.status,
-      tipoVaga: agendamento.tipoVaga,
-      email: agendamento.email,
-      telefone: agendamento.telefone,
-      userAddress: agendamento.userAddress.toString(),
-      descricao: agendamento.descricao.trim(),
-    );
-    return model.toEntity();
   }
 
   @override
@@ -119,5 +141,40 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
       );
     }
     return null;
+  }
+
+  @override
+  Future<List<TramposEntiti>> getMiTrampos() async {
+    try {
+      final String currentUserId = auth.currentUser?.uid ?? '';
+
+      if (currentUserId.isEmpty) {
+        return [];
+      }
+
+      DocumentReference userRef = firestore.doc('users/$currentUserId');
+      QuerySnapshot querySnapshot =
+          await firestore
+              .collection('Trampos')
+              .where('userId', isEqualTo: userRef)
+              .orderBy('createDate', descending: true)
+              .get();
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return TramposEntiti(
+          id: doc.id,
+          createTrampoNome: data['createTrampoNome'] ?? '',
+          email: data['email'] ?? '',
+          telefone: data['telefone'] ?? '',
+          createDate: (data['createDate'] as Timestamp).toDate().toString(),
+          tipoVaga: data['tipoVaga'] ?? '',
+          status: data['status'] ?? 'Disponível',
+          userAddress: data['userAddress'] ?? '',
+          descricao: data['descricao'] ?? '',
+        );
+      }).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 }

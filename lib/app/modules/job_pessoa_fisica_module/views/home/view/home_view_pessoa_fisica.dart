@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/settings_view_controller_pessoa_fisica.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/dialogs_home_view_pessoa_fisica.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_page.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/trampos_salvos_page/salvos_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_page_helper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeViewPessoaFisica extends StatefulWidget {
   const HomeViewPessoaFisica({super.key});
@@ -309,40 +310,86 @@ class _InicioPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 32),
-
-          // Seção de Trampos Disponíveis
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Trampos Recentes',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
+          Center(
+            child: Text(
+              'Trampos Recentes',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
               ),
-              TextButton(
-                onPressed: () => onNavigateToTab(1),
-                child: Text(
-                  'Ver todos',
-                  style: TextStyle(
-                    color: Colors.teal.shade600,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 16),
 
-          // Lista de Trampos - Estrutura básica para futuro Firebase
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 3, // Temporário - virá do Firebase
-            itemBuilder: (context, index) {
-              return _buildTrampoCard(index);
+          // Lista de Trampos do Firebase
+          StreamBuilder<QuerySnapshot>(
+            stream:
+                FirebaseFirestore.instance
+                    .collection('Trampos')
+                    .orderBy('createDate', descending: true)
+                    .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.teal),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error, size: 60, color: Colors.red),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Erro ao carregar trampos',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.work_off, size: 60, color: Colors.grey),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Nenhum trampo cadastrado',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Crie o primeiro trampo na aba "Criar"',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.grey,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final doc = snapshot.data!.docs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  return _buildTrampoCardFromData(data, isDark);
+                },
+              );
             },
           ),
         ],
@@ -350,150 +397,156 @@ class _InicioPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTrampoCard(int index) {
-    return Builder(
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey.shade800 : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+  Widget _buildTrampoCardFromData(Map<String, dynamic> data, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey.shade800 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Título da vaga
+            Text(
+              data['tipoVaga'] ?? 'Trampo',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Criador
+            Row(
               children: [
-                // Título da vaga
+                Icon(
+                  Icons.person,
+                  size: 16,
+                  color: isDark ? Colors.white70 : Colors.grey.shade600,
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  'Trampo ${index + 1}', // Placeholder - virá do Firebase
+                  data['createTrampoNome'] ?? 'Usuário',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Empresa
-                Row(
-                  children: [
-                    Icon(
-                      Icons.business,
-                      size: 16,
-                      color: isDark ? Colors.white70 : Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Empresa Exemplo', // Placeholder - virá do Firebase
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.white70 : Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // Localização
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 16,
-                      color: isDark ? Colors.white70 : Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'São Paulo, SP', // Placeholder - virá do Firebase
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Descrição
-                Text(
-                  'Descrição da vaga será carregada do Firebase...', // Placeholder
-                  style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: isDark ? Colors.white70 : Colors.grey.shade700,
-                    height: 1.3,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
+              ],
+            ),
+            const SizedBox(height: 4),
 
-                // Botões de ação
+            // Status
+            Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  size: 16,
+                  color: isDark ? Colors.white70 : Colors.grey.shade600,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  data['status'] ?? 'Disponível',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white60 : Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Descrição
+            Text(
+              data['descricao'] ?? 'Sem descrição',
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.white70 : Colors.grey.shade700,
+                height: 1.3,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton.icon(
                       onPressed: () {
                         Get.snackbar(
-                          'Trampo Salvo',
-                          'Funcionalidade será implementada com Firebase',
-                          backgroundColor: Colors.orange,
+                          'Contato',
+                          'Telefone: ${data['telefone'] ?? 'Não informado'}',
+                          backgroundColor: Colors.teal,
                           colorText: Colors.white,
-                          duration: const Duration(seconds: 2),
+                          duration: const Duration(seconds: 3),
                         );
                       },
-                      icon: const Icon(Icons.bookmark_border, size: 18),
-                      label: const Text('Salvar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            isDark ? Colors.white70 : Colors.grey.shade600,
-                      ),
+                      icon: const Icon(Icons.phone, size: 18),
+                      label: const Text('Contato'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.teal),
                     ),
-                    ElevatedButton(
+                    IconButton(
                       onPressed: () {
-                        Get.snackbar(
-                          'Candidatura',
-                          'Funcionalidade será implementada com Firebase',
-                          backgroundColor: Colors.orange,
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 2),
-                        );
+                        // Implementação do método de salvar vaga
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      icon: Icon(
+                        Icons.bookmark_border,
+                        color: Colors.teal,
+                        size: 24,
                       ),
-                      child: const Text(
-                        'Candidatar',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      tooltip: 'Salvar vaga',
+                    ),
+                    const Text(
+                      'Salvar',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
+                ElevatedButton(
+                  onPressed: () {
+                    Get.snackbar(
+                      'Interesse',
+                      'Funcionalidade de candidatura em desenvolvimento',
+                      backgroundColor: Colors.orange,
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 2),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Candidatar',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

@@ -6,4 +6,5 @@ abstract class TramposRepositoryAbstract {
   Future<void> updateTrampos(TramposEntiti agendamento);
   Future<void> deleteTrampos(String id);
   Future<TramposEntiti?> getTrampoById(String id);
+  Future<List<TramposEntiti>> getMiTrampos();
 }

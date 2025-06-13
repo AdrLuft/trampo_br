@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,20 +13,19 @@ class TramposController extends GetxController {
   late final DeleteTramposUsecase _deleteTramposUsecase;
   final isLoading = false.obs;
   final TramposRepositoryAbstract _repository;
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  // Acesso ao controller de tema
   GlobalThemeController get themeController =>
       Get.find<GlobalThemeController>();
 
   TramposController(this._listarTramposUsecases, this._repository);
+  //=======================================================================================================================
 
   Future<void> createTrampo({
     required String descricao,
-    required String createTrampoNome,
     required String tipoVaga,
-    required String email,
-    String? telefone,
-    required String userAddress,
+    required String telefone,
   }) async {
     if (descricao.trim().isEmpty) {
       Get.snackbar(
@@ -39,29 +39,45 @@ class TramposController extends GetxController {
     isLoading.value = true;
 
     try {
+      final String userId = auth.currentUser?.uid ?? '';
+      final String userEmail = auth.currentUser?.email ?? '';
+
+      if (userId.isEmpty) {
+        throw Exception('Usuário não autenticado');
+      }
       final novoTrampo = TramposEntiti(
         id: '',
         descricao: descricao.trim(),
-        createTrampoNome: createTrampoNome.trim(),
+        createTrampoNome: '',
         tipoVaga: tipoVaga,
         createDate: DateTime.now().toIso8601String(),
         status: 'Disponivel',
-        email: email,
-        telefone: telefone ?? '',
-        userAddress: userAddress.trim(),
+        email: userEmail,
+        telefone: telefone.trim(),
+        userAddress: '',
       );
+
       await _repository.createTrampo(novoTrampo);
+
       Get.snackbar(
         'Sucesso!',
         'A vaga foi criada e já está disponível.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
+        duration: const Duration(seconds: 1),
       );
     } catch (e) {
+      debugPrint('Erro detalhado ao criar trampo: $e');
+      debugPrint('Tipo do erro: ${e.runtimeType}');
+      if (e is FirebaseException) {
+        debugPrint('Código do erro Firebase: ${e.code}');
+        debugPrint('Mensagem do erro Firebase: ${e.message}');
+      }
+
       Get.snackbar(
         'Operação Falhou',
-        'Não foi possível criar a vaga. Tente novamente.',
+        'Não foi possível criar a vaga. Erro: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -70,6 +86,8 @@ class TramposController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  //=======================================================================================================================
 
   Future<List> listarTrampos() async {
     try {
@@ -92,6 +110,43 @@ class TramposController extends GetxController {
       return Future.error('Erro ao deletar agendamento: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  final minhasVagas = <TramposEntiti>[].obs;
+
+  //=======================================================================================================================
+
+  Future<void> carregarMinhasVagas() async {
+    try {
+      isLoading.value = true;
+      final vagas = await _listarTramposUsecases.getMinhasVagas();
+      minhasVagas.value = vagas;
+    } catch (e) {
+      Get.snackbar(
+        'Erro',
+        'Erro ao carregar suas vagas: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  //=======================================================================================================================
+
+  Future<void> excluirMeuTrampo(String id) async {
+    try {
+      await deleteTrampo(id);
+      await carregarMinhasVagas();
+    } catch (e) {
+      Get.snackbar(
+        'Erro',
+        'Erro ao excluir vaga: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
