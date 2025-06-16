@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_pages_dialos/vagas_pages_dialogs.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhes_vagas_page.dart'
+    as detalhes;
 
 class VagasPage extends StatefulWidget {
   const VagasPage({super.key});
@@ -54,7 +57,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
   }
 
   // Função para mostrar contato
-  void mostrarContato(String telefone, String? email) {
+  static void mostrarContato(String telefone, String? email) {
     Get.dialog(
       AlertDialog(
         title: const Text('Informações de Contato'),
@@ -232,180 +235,169 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     final createDate =
         (data['createDate'] as Timestamp?)?.toDate() ?? DateTime.now();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    data['tipoVaga'] ?? 'Não especificado',
-                    style: TextStyle(
-                      color: Colors.teal.shade700,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: getStatusColor(data['status']),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    data['status'] ?? 'Disponível',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              data['descricao'] ?? 'Sem descrição',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  size: 16,
-                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    data['createTrampoNome'] ?? 'Usuário não identificado',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? Colors.white70 : Colors.grey.shade700,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule,
-                  size: 16,
-                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  formatarData(createDate),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white60 : Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    if (data['telefone'] != null &&
-                        data['telefone'].toString().isNotEmpty)
-                      TextButton.icon(
-                        onPressed:
-                            () => mostrarContato(
-                              data['telefone'].toString(),
-                              data['email']?.toString(),
-                            ),
-                        icon: const Icon(Icons.phone, size: 18),
-                        label: const Text('Contato'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.teal,
-                        ),
-                      ),
-                    IconButton(
-                      onPressed: () {
-                        // TODO: Implementar método de salvar vaga
-                        Get.snackbar(
-                          'Vaga Salva',
-                          'Vaga salva nos seus favoritos',
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 2),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.bookmark_border,
-                        color: Colors.orange.shade600,
-                        size: 24,
-                      ),
-                      tooltip: 'Salvar vaga',
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Get.snackbar(
-                      'Interesse',
-                      'Funcionalidade de candidatura será implementada',
-                      backgroundColor: Colors.orange,
-                      colorText: Colors.white,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Tenho Interesse'),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => detalhes.DetalhesVagaPage(vagaData: data, vagaId: docId));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade800 : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      data['tipoVaga'] ?? 'Não especificado',
+                      style: TextStyle(
+                        color: Colors.teal.shade700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                data['descricao'] ?? 'Sem descrição',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.person,
+                    size: 16,
+                    color: isDark ? Colors.white70 : Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      data['createTrampoNome'] ?? 'Usuário não identificado',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white70 : Colors.grey.shade700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: isDark ? Colors.white70 : Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    formatarData(createDate),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white60 : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              StatusVagaWidget(status: data['status'] ?? 'Disponível'),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      if (data['telefone'] != null &&
+                          data['telefone'].toString().isNotEmpty)
+                        TextButton.icon(
+                          onPressed:
+                              () => mostrarContato(
+                                data['telefone'].toString(),
+                                data['email']?.toString(),
+                              ),
+                          icon: const Icon(Icons.phone, size: 18),
+                          label: const Text('Contato'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.teal,
+                          ),
+                        ),
+                      IconButton(
+                        onPressed: () {
+                          // TODO: Implementar método de salvar vaga
+                          // Get.snackbar(
+                          //   'Vaga Salva',
+                          //   'Vaga salva nos seus favoritos',
+                          //   backgroundColor: Colors.green,
+                          //   colorText: Colors.white,
+                          //   duration: const Duration(seconds: 2),
+                          // );
+                        },
+                        icon: Icon(
+                          Icons.bookmark_border,
+                          color: Colors.orange.shade600,
+                          size: 24,
+                        ),
+                        tooltip: 'Salvar vaga',
+                      ),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.snackbar(
+                        'Interesse',
+                        'Funcionalidade de candidatura será implementada',
+                        backgroundColor: Colors.orange,
+                        colorText: Colors.white,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Tenho Interesse'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

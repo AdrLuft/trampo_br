@@ -9,7 +9,8 @@ class CreateTramposModel {
   final String email;
   final String telefone;
   final String userAddress;
-  final String descricao; // Assuming descricao is not provided in the model
+  final String descricao;
+  final String? userId;
 
   CreateTramposModel({
     required this.id,
@@ -21,6 +22,7 @@ class CreateTramposModel {
     required this.telefone,
     required this.userAddress,
     required this.descricao,
+    required this.userId,
   });
 
   factory CreateTramposModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class CreateTramposModel {
       telefone: json['telefone'] as String? ?? '',
       userAddress: json['userAddress'] as String? ?? '',
       descricao: json['descricao'] as String? ?? '',
+      userId: json['userId'] as String?,
     );
   }
 
@@ -48,6 +51,7 @@ class CreateTramposModel {
       'telefone': telefone,
       'userAddress': userAddress,
       'descricao': descricao,
+      'userId': userId,
     };
   }
 
@@ -61,5 +65,6 @@ class CreateTramposModel {
     status: status,
     userAddress: userAddress,
     descricao: descricao,
+    userId: '',
   );
 }

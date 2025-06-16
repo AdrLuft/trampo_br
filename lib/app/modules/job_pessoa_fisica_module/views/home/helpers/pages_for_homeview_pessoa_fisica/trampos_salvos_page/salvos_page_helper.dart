@@ -5,23 +5,29 @@ class SalvosPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.bookmark, size: 80, color: Colors.teal),
-          SizedBox(height: 16),
-          Text(
-            'Vagas Salvas',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Suas vagas favoritas ficarão aqui',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(title: const Text('Trampos Salvos')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bookmark_border,
+              size: 70,
+              color: Theme.of(context).primaryColor,
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Lista de Trampos Salvos',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Implemente suas funcionalidades aqui',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }

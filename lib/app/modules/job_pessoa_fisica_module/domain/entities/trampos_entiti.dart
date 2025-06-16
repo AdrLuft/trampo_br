@@ -8,6 +8,7 @@ class TramposEntiti {
   final String status;
   final String? userAddress;
   final String descricao;
+  final String? userId;
 
   TramposEntiti({
     required this.id,
@@ -19,5 +20,6 @@ class TramposEntiti {
     required this.status,
     required this.userAddress,
     required this.descricao,
+    required this.userId,
   });
 }

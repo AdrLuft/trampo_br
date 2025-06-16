@@ -12,14 +12,15 @@ class PessoaFisicaAppBindings extends Bindings {
     // Repositório (Interface => Implementação)
     Get.lazyPut<TramposRepositoryAbstract>(() => TramposRepositoryImp());
 
-    // Casos de Uso
+    // Casos de Uso ===============================================
     Get.lazyPut(
       () => ListarTramposPessoaFisicaUsecases(
         Get.find<TramposRepositoryAbstract>(),
       ),
     );
 
-    // Controller - agora recebe o repositório diretamente
+    // Controladores ===============================================
+
     Get.lazyPut(
       () => TramposController(
         Get.find<ListarTramposPessoaFisicaUsecases>(),

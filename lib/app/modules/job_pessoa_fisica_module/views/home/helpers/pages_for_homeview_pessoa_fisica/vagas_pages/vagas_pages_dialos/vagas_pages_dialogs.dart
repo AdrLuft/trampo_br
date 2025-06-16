@@ -38,6 +38,7 @@ class VagasPagesDialogs {
         case 'ocupado':
           return Colors.orange;
         case 'finalizado':
+        case 'encerrado':
           return Colors.grey;
         default:
           return Colors.green;
@@ -103,12 +104,12 @@ class VagasPagesDialogs {
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               onPressed: () {
                 Get.back();
-                controller.excluirMeuTrampo(vagaId);
+                controller.deleteTrampos(vagaId);
               },
-              child: const Text('Excluir'),
+              child: const Text('Excluir', style: TextStyle(color: Colors.red)),
             ),
           ],
         ),
@@ -230,15 +231,49 @@ class VagasPagesDialogs {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (vaga.telefone.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () => mostrarContato(vaga.telefone, vaga.email),
-                    icon: const Icon(Icons.phone, size: 18),
-                    label: const Text('Contato'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.teal),
-                  )
-                else
-                  const SizedBox(),
+                Row(
+                  children: [
+                    if (vaga.telefone.isNotEmpty)
+                      TextButton.icon(
+                        onPressed:
+                            () => mostrarContato(vaga.telefone, vaga.email),
+                        icon: const Icon(Icons.phone, size: 18),
+                        label: const Text('Contato'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.teal,
+                        ),
+                      ),
+
+                    TextButton.icon(
+                      onPressed:
+                          () => controller.alterStatusTrampo(
+                            vaga.id,
+                            vaga.status,
+                            vaga.userId ?? '',
+                          ),
+                      icon: Icon(
+                        vaga.status.toLowerCase() == 'disponivel' ||
+                                vaga.status.toLowerCase() == 'disponível'
+                            ? Icons.close
+                            : Icons.check_circle,
+                        size: 18,
+                      ),
+                      label: Text(
+                        vaga.status.toLowerCase() == 'disponivel' ||
+                                vaga.status.toLowerCase() == 'disponível'
+                            ? 'Encerrar'
+                            : 'Reabrir',
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            vaga.status.toLowerCase() == 'disponivel' ||
+                                    vaga.status.toLowerCase() == 'disponível'
+                                ? Colors.orange
+                                : Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
 
                 TextButton.icon(
                   onPressed: () => confirmarExclusao(vaga.id),

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/settings_view_controller_pessoa_fisica.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_page.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhes_vagas_page.dart'
+    as detalhes;
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/mensagens_page/mensagens_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/trampos_salvos_page/salvos_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_page_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,10 +38,11 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
 
   // Lista de páginas para cada aba
   List<Widget> get _pages => [
-    _InicioPage(onNavigateToTab: _onItemTapped),
+    _InicioPage(onNavigateToTab: _onItemTapped, controller: _controller),
     const VagasPage(),
     const SalvosPage(),
     const CriarPage(),
+    const MensagensPage(),
   ];
 
   @override
@@ -55,15 +60,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              // Ação de notificações
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.chat),
-            onPressed: () {
-              Get.toNamed('/mensagens');
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -89,6 +86,10 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Vagas'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Salvos'),
           BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Criar'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message),
+            label: 'Mensagens',
+          ),
         ],
       ),
     );
@@ -100,7 +101,6 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
-          // Header do Drawer
           Container(
             height: 220,
             width: double.infinity,
@@ -256,8 +256,9 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
 // Páginas individuais para cada aba
 class _InicioPage extends StatelessWidget {
   final Function(int) onNavigateToTab;
+  final TramposController controller;
 
-  const _InicioPage({required this.onNavigateToTab});
+  const _InicioPage({required this.onNavigateToTab, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -287,10 +288,10 @@ class _InicioPage extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
+                const Center(
                   child: Text(
                     'Bem-vindo!',
                     style: TextStyle(
@@ -301,7 +302,7 @@ class _InicioPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 8),
-                Text(
+                const Text(
                   'Encontre as melhores oportunidades de trabalho',
                   style: TextStyle(fontSize: 16, color: Colors.white70),
                 ),
@@ -398,153 +399,126 @@ class _InicioPage extends StatelessWidget {
   }
 
   Widget _buildTrampoCardFromData(Map<String, dynamic> data, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Título da vaga
-            Text(
-              data['tipoVaga'] ?? 'Trampo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Criador
-            Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  size: 16,
-                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  data['createTrampoNome'] ?? 'Usuário',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white70 : Colors.grey.shade700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-
-            // Status
-            Row(
-              children: [
-                Icon(
-                  Icons.info,
-                  size: 16,
-                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  data['status'] ?? 'Disponível',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white60 : Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Descrição
-            Text(
-              data['descricao'] ?? 'Sem descrição',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white70 : Colors.grey.shade700,
-                height: 1.3,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        Get.snackbar(
-                          'Contato',
-                          'Telefone: ${data['telefone'] ?? 'Não informado'}',
-                          backgroundColor: Colors.teal,
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 3),
-                        );
-                      },
-                      icon: const Icon(Icons.phone, size: 18),
-                      label: const Text('Contato'),
-                      style: TextButton.styleFrom(foregroundColor: Colors.teal),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        // Implementação do método de salvar vaga
-                      },
-                      icon: Icon(
-                        Icons.bookmark_border,
-                        color: Colors.teal,
-                        size: 24,
-                      ),
-                      tooltip: 'Salvar vaga',
-                    ),
-                    const Text(
-                      'Salvar',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Get.snackbar(
-                      'Interesse',
-                      'Funcionalidade de candidatura em desenvolvimento',
-                      backgroundColor: Colors.orange,
-                      colorText: Colors.white,
-                      duration: const Duration(seconds: 2),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Candidatar',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => detalhes.DetalhesVagaPage(vagaData: data, vagaId: ''));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade800 : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Título da vaga
+              Text(
+                data['tipoVaga'] ?? 'Trampo',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Criador
+              Row(
+                children: [
+                  Icon(
+                    Icons.person,
+                    size: 16,
+                    color: isDark ? Colors.white70 : Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    data['createTrampoNome'] ?? 'Usuário',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white70 : Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              StatusVagaWidget(status: data['status'] ?? 'Disponível'),
+              const SizedBox(height: 12),
+
+              // Descrição
+              Text(
+                data['descricao'] ?? 'Sem descrição',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white70 : Colors.grey.shade700,
+                  height: 1.3,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          // Implementação do método de salvar vaga
+                        },
+                        icon: Icon(
+                          Icons.bookmark_border,
+                          color: Colors.teal,
+                          size: 24,
+                        ),
+                        tooltip: 'Salvar vaga',
+                      ),
+                    ],
+                  ),
+                  const Text(
+                    'Salvar Vaga',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Get.snackbar(
+                    'Interesse',
+                    'Funcionalidade de candidatura em desenvolvimento',
+                    backgroundColor: Colors.orange,
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 2),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Candidatar',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

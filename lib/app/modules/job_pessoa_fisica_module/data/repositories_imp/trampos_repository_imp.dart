@@ -4,7 +4,7 @@ import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/mo
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/trampos_entiti.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/trampos_repository_abstract.dart';
 
-class TramposRepositoryImp extends TramposRepositoryAbstract {
+class TramposRepositoryImp implements TramposRepositoryAbstract {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -63,6 +63,7 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
         telefone: agendamento.telefone,
         userAddress: userAddress,
         descricao: agendamento.descricao.trim(),
+        userId: user,
       );
 
       return model.toEntity();
@@ -72,11 +73,11 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
   }
 
   @override
-  Future<void> deleteTrampos(String id) async {
+  Future<void> deleteTrampos(String idTrampo) async {
     CollectionReference agendamentosCollection = firestore.collection(
       'Trampos',
     );
-    await agendamentosCollection.doc(id).delete();
+    await agendamentosCollection.doc(idTrampo).delete();
   }
 
   @override
@@ -100,6 +101,7 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
         status: doc['status'],
         userAddress: doc['userAddress'],
         descricao: doc['descricao'],
+        userId: user,
       );
     }).toList();
   }
@@ -138,6 +140,7 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
         status: doc['status'],
         userAddress: doc['userAddress'],
         descricao: doc['descricao'],
+        userId: user,
       );
     }
     return null;
@@ -171,10 +174,24 @@ class TramposRepositoryImp extends TramposRepositoryAbstract {
           status: data['status'] ?? 'Disponível',
           userAddress: data['userAddress'] ?? '',
           descricao: data['descricao'] ?? '',
+          userId: currentUserId,
         );
       }).toList();
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<void> updateTrampoStatus(
+    String idTrampo,
+    String novoStatus,
+    String userId,
+  ) {
+    CollectionReference tramposCollection = firestore.collection('Trampos');
+    return tramposCollection.doc(idTrampo).update({
+      'status': novoStatus,
+      'userId': firestore.doc('users/$userId'),
+    });
   }
 }
