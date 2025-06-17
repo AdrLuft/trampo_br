@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_helpers/criar_trampo_page_helpers.dart';
 
 class CriarPage extends StatefulWidget {
   const CriarPage({super.key});
@@ -14,8 +15,21 @@ class _CriarPageState extends State<CriarPage> {
   final TextEditingController _descricaoController = TextEditingController();
   final TramposController _tramposController = Get.find<TramposController>();
   final TextEditingController _telefoneController = TextEditingController();
+  final TextEditingController _tituloController = TextEditingController();
+  final TextEditingController _salarioController = TextEditingController(); //
+  final TextEditingController _requisitosController = TextEditingController();
+  final TextEditingController _exigenciasController = TextEditingController();
+  final TextEditingController _valorizadoController = TextEditingController();
+  final TextEditingController _benificiosController = TextEditingController();
+
+  // Listas para armazenar as tags
+  final List<String> _exigencias = [];
+  final List<String> _valorizados = [];
+  final List<String> _beneficios = [];
 
   String? _tipoVagaSelecionado;
+  String? _modalidadeSelecionada;
+  bool _salarioACombinar = false;
 
   final List<String> _tiposVaga = [
     'Bico',
@@ -27,6 +41,8 @@ class _CriarPageState extends State<CriarPage> {
     'Meio Período',
   ];
 
+  final List<String> _modalidades = ['Presencial', 'Híbrido', 'Remoto'];
+
   @override
   void dispose() {
     _descricaoController.dispose();
@@ -36,9 +52,113 @@ class _CriarPageState extends State<CriarPage> {
   void _limparFormulario() {
     _descricaoController.clear();
     _telefoneController.clear();
+    _tituloController.clear();
+    _salarioController.clear();
+    _requisitosController.clear();
+    _exigenciasController.clear();
+    _valorizadoController.clear();
+    _benificiosController.clear();
     setState(() {
       _tipoVagaSelecionado = null;
+      _modalidadeSelecionada = null;
+      _exigencias.clear();
+      _valorizados.clear();
+      _beneficios.clear();
     });
+  }
+
+  // Função para adicionar um item à lista
+  void _adicionarItem(List<String> lista, TextEditingController controller) {
+    String texto = controller.text.trim();
+    if (texto.isNotEmpty && !lista.contains(texto)) {
+      setState(() {
+        lista.add(texto);
+        controller.clear();
+      });
+    }
+  }
+
+  // Função para remover um item da lista
+  void _removerItem(List<String> lista, int index) {
+    setState(() {
+      lista.removeAt(index);
+    });
+  }
+
+  Widget _buildTagInput(
+    String title,
+    String hintText,
+    TextEditingController controller,
+    List<String> items,
+    Function(List<String>, TextEditingController) onAdd,
+    Function(List<String>, int) onDelete,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor:
+                      isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                ),
+                onFieldSubmitted: (_) => onAdd(items, controller),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () => onAdd(items, controller),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Icon(Icons.add),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        items.isNotEmpty
+            ? Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(12),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+              ),
+              child: CriarTrampoPageHelpers.buildChips(
+                items,
+                (index) => onDelete(items, index),
+              ),
+            )
+            : const SizedBox.shrink(),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 
   @override
@@ -128,7 +248,7 @@ class _CriarPageState extends State<CriarPage> {
                             child: Row(
                               children: [
                                 Icon(
-                                  _getIconForTipo(tipo),
+                                  CriarTrampoPageHelpers.getIconForTipo(tipo),
                                   size: 20,
                                   color: Colors.teal,
                                 ),
@@ -150,6 +270,182 @@ class _CriarPageState extends State<CriarPage> {
               const SizedBox(height: 24),
               Center(
                 child: Text(
+                  'Modalidade de Trabalho',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(12),
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _modalidadeSelecionada,
+                    hint: const Text('Selecione a modalidade'),
+                    isExpanded: true,
+                    icon: const Icon(Icons.arrow_drop_down),
+                    items:
+                        _modalidades.map((String modalidade) {
+                          return DropdownMenuItem<String>(
+                            value: modalidade,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  CriarTrampoPageHelpers.getIconForModalidade(
+                                    modalidade,
+                                  ),
+                                  size: 20,
+                                  color: Colors.teal,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(modalidade),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                    onChanged: (String? novaModalidade) {
+                      setState(() {
+                        _modalidadeSelecionada = novaModalidade;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              Center(
+                child: Text(
+                  'Valor da Remuneração',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Switch para "A combinar"
+              Row(
+                children: [
+                  Text(
+                    'Valor a combinar',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const Spacer(),
+                  Switch(
+                    value: _salarioACombinar,
+                    activeColor: Colors.teal,
+                    onChanged: (value) {
+                      setState(() {
+                        _salarioACombinar = value;
+                        if (value) {
+                          // Limpa o campo de salário quando seleciona "A combinar"
+                          _salarioController.clear();
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+
+              if (!_salarioACombinar) ...[
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey),
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                  ),
+                  child: Row(
+                    children: [
+                      // Prefixo de moeda
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: Colors.grey.shade400),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.attach_money, color: Colors.teal),
+                            SizedBox(width: 4),
+                            Text(
+                              'R\$',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Campo do salário
+                      Expanded(
+                        child: TextFormField(
+                          controller: _salarioController,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: '0,00',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 16,
+                            ),
+                          ),
+                          validator:
+                              _salarioACombinar
+                                  ? null
+                                  : (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Informe o valor da remuneração';
+                                    }
+
+                                    // Verifica se é um número válido
+                                    try {
+                                      // Substitui vírgula por ponto para permitir valor decimal
+                                      final valorFormatado = value
+                                          .replaceAll('.', '')
+                                          .replaceAll(',', '.');
+                                      final valor = double.parse(
+                                        valorFormatado,
+                                      );
+                                      if (valor <= 0) {
+                                        return 'O valor deve ser maior que zero';
+                                      }
+                                    } catch (e) {
+                                      return 'Informe um valor válido';
+                                    }
+                                    return null;
+                                  },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Center(
+                child: Text(
                   'Contato',
                   style: TextStyle(
                     fontSize: 16,
@@ -158,7 +454,7 @@ class _CriarPageState extends State<CriarPage> {
                   ),
                 ),
               ),
-
+              const SizedBox(height: 4),
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
@@ -226,9 +522,45 @@ class _CriarPageState extends State<CriarPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-
+              const SizedBox(height: 20),
+              Center(
+                child: Text(
+                  'Vaga',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
               // Campo Descrição
+              TextFormField(
+                controller:
+                    _tituloController, // Note que aqui deveria ser _tituloController, não _descricaoController
+                decoration: InputDecoration(
+                  hintText: 'Digite a chamada da vaga',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor:
+                      isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                ),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                maxLength: 100,
+                maxLines: 1,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Por favor, informe o título da vaga';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8),
+
               Center(
                 child: Text(
                   'Descrição da Vaga',
@@ -243,9 +575,10 @@ class _CriarPageState extends State<CriarPage> {
               TextFormField(
                 controller: _descricaoController,
                 maxLines: 6,
+                maxLength: 500,
                 decoration: InputDecoration(
                   hintText:
-                      'Descreva detalhadamente o trabalho, requisitos, valor, horários, etc.',
+                      'Descreva detalhadamente o trabalho, horários, etc.',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -264,8 +597,77 @@ class _CriarPageState extends State<CriarPage> {
                   return null;
                 },
               ),
+              const SizedBox(height: 8),
 
-              const SizedBox(height: 32),
+              Center(
+                child: Text(
+                  'Requisitos da Vaga',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                constraints: const BoxConstraints(
+                  minHeight: 120,
+                  maxHeight: 200,
+                ),
+                child: TextFormField(
+                  controller: _requisitosController,
+                  minLines: 3,
+                  maxLines: 6,
+                  maxLength: 500,
+                  decoration: InputDecoration(
+                    hintText: 'Descreva detalhadamente os requisitos da vaga.',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor:
+                        isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                    alignLabelWithHint: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Por favor, descreva os requisitos da vaga.';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // SUBSTITUA os campos simples pelos campos de tags abaixo
+              _buildTagInput(
+                'Exigências',
+                'Digite uma exigência e pressione adicionar',
+                _exigenciasController,
+                _exigencias,
+                _adicionarItem,
+                _removerItem,
+              ),
+
+              _buildTagInput(
+                'Valorizado',
+                'O que é valorizado para a vaga?',
+                _valorizadoController,
+                _valorizados,
+                _adicionarItem,
+                _removerItem,
+              ),
+
+              _buildTagInput(
+                'Benefícios',
+                'Digite um benefício e pressione adicionar',
+                _benificiosController,
+                _beneficios,
+                _adicionarItem,
+                _removerItem,
+              ),
 
               // Botões
               Row(
@@ -313,6 +715,9 @@ class _CriarPageState extends State<CriarPage> {
                                       descricao: _descricaoController.text,
                                       tipoVaga: _tipoVagaSelecionado!,
                                       telefone: _telefoneController.text,
+                                      exigencias: _exigencias,
+                                      valorizados: _valorizados,
+                                      beneficios: _beneficios,
                                     );
                                     _limparFormulario();
                                   } else if (_tipoVagaSelecionado == null) {
@@ -358,26 +763,5 @@ class _CriarPageState extends State<CriarPage> {
         ),
       ),
     );
-  }
-
-  IconData _getIconForTipo(String tipo) {
-    switch (tipo) {
-      case 'Bico':
-        return Icons.handyman;
-      case 'PJ (Pessoa Jurídica)':
-        return Icons.business;
-      case 'CLT (Consolidação das Leis do Trabalho)':
-        return Icons.work;
-      case 'Freelancer':
-        return Icons.laptop;
-      case 'Estágio':
-        return Icons.school;
-      case 'Temporário':
-        return Icons.schedule;
-      case 'Meio Período':
-        return Icons.access_time;
-      default:
-        return Icons.work_outline;
-    }
   }
 }

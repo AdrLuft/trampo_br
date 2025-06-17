@@ -33,6 +33,9 @@ class TramposController extends GetxController {
     required String descricao,
     required String tipoVaga,
     required String telefone,
+    required List<String> exigencias,
+    required List<String> valorizados,
+    required List<String> beneficios,
   }) async {
     if (descricao.trim().isEmpty) {
       Get.snackbar(
