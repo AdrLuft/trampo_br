@@ -33,9 +33,14 @@ class TramposController extends GetxController {
     required String descricao,
     required String tipoVaga,
     required String telefone,
+    required List<String> requisitos,
     required List<String> exigencias,
     required List<String> valorizados,
     required List<String> beneficios,
+    String titulo = '',
+    String modalidade = 'Presencial',
+    String salario = '',
+    bool salarioACombinar = false,
   }) async {
     if (descricao.trim().isEmpty) {
       Get.snackbar(
@@ -55,6 +60,7 @@ class TramposController extends GetxController {
       if (userId.isEmpty) {
         throw Exception('Usuário não autenticado');
       }
+      String valorSalario = salarioACombinar ? 'A combinar' : salario;
       final novoTrampo = TramposEntiti(
         id: '',
         descricao: descricao.trim(),
@@ -66,8 +72,16 @@ class TramposController extends GetxController {
         telefone: telefone.trim(),
         userAddress: '',
         userId: userId,
+        titulo: titulo,
+        modalidade: modalidade,
+        salario: valorSalario,
+        salarioACombinar: salarioACombinar,
+        exigencias: List<String>.from(exigencias),
+        valorizados: List<String>.from(valorizados),
+        beneficios: List<String>.from(beneficios),
+        requisitos: List<String>.from(requisitos),
       );
-
+      debugPrint('Criando trampo: ${novoTrampo.toString()}');
       await _repository.createTrampo(novoTrampo);
 
       Get.snackbar(

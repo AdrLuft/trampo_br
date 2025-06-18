@@ -38,10 +38,18 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
         createDateTime = DateTime.now();
       }
 
+      // Garantir que as listas nunca sejam nulas
+      List<String> requisitosList = agendamento.requisitos?.toList() ?? [];
+      List<String> exigenciasList = agendamento.exigencias?.toList() ?? [];
+      List<String> valorizadosList = agendamento.valorizados?.toList() ?? [];
+      List<String> beneficiosList = agendamento.beneficios?.toList() ?? [];
+
+      // Log para debug
+      print("Requisitos a serem salvos: $requisitosList");
+
       final trampoData = {
-        'userId': firestore.doc('users/$user'),
+        'userId': user,
         'createTrampoNome': userName,
-        //'userName': userName,
         'userAddress': userAddress,
         'email': userEmail,
         'telefone': agendamento.telefone,
@@ -49,6 +57,14 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
         'tipoVaga': agendamento.tipoVaga,
         'status': agendamento.status,
         'descricao': agendamento.descricao.trim(),
+        'requisitos': requisitosList,
+        'exigencias': exigenciasList,
+        'valorizados': valorizadosList,
+        'beneficios': beneficiosList,
+        'titulo': agendamento.titulo,
+        'modalidade': agendamento.modalidade,
+        'salario':
+            agendamento.salarioACombinar ? 'A combinar' : agendamento.salario,
       };
 
       DocumentReference docRef = await tramposCollection.add(trampoData);
@@ -64,6 +80,15 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
         userAddress: userAddress,
         descricao: agendamento.descricao.trim(),
         userId: user,
+        requisitos: agendamento.requisitos,
+        exigencias: agendamento.exigencias,
+        valorizados: agendamento.valorizados,
+        beneficios: agendamento.beneficios,
+        titulo: agendamento.titulo,
+        modalidade: agendamento.modalidade,
+        salario:
+            agendamento.salarioACombinar ? 'A combinar' : agendamento.salario,
+        salarioACombinar: agendamento.salarioACombinar,
       );
 
       return model.toEntity();
@@ -102,6 +127,7 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
         userAddress: doc['userAddress'],
         descricao: doc['descricao'],
         userId: user,
+        requisitos: doc['requisitos'] ?? '',
       );
     }).toList();
   }
@@ -141,6 +167,7 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
         userAddress: doc['userAddress'],
         descricao: doc['descricao'],
         userId: user,
+        requisitos: doc['requisitos'] ?? '',
       );
     }
     return null;
@@ -175,6 +202,7 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
           userAddress: data['userAddress'] ?? '',
           descricao: data['descricao'] ?? '',
           userId: currentUserId,
+          requisitos: data['requisitos'] ?? '',
         );
       }).toList();
     } catch (e) {

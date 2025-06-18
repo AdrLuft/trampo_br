@@ -9,6 +9,14 @@ class TramposEntiti {
   final String? userAddress;
   final String descricao;
   final String? userId;
+  final List<String> requisitos; // Alterado de String para List<String>
+  final String titulo;
+  final String modalidade;
+  final String salario;
+  final bool salarioACombinar;
+  final List<String> exigencias;
+  final List<String> valorizados;
+  final List<String> beneficios;
 
   TramposEntiti({
     required this.id,
@@ -21,5 +29,13 @@ class TramposEntiti {
     required this.userAddress,
     required this.descricao,
     required this.userId,
+    this.requisitos = const [], // Alterado para lista com valor padrão
+    this.titulo = '',
+    this.modalidade = 'Presencial',
+    this.salario = '',
+    this.salarioACombinar = false,
+    this.exigencias = const [],
+    this.valorizados = const [],
+    this.beneficios = const [],
   });
 }

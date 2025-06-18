@@ -56,42 +56,6 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     return '${data.day}/${data.month}/${data.year}';
   }
 
-  // Função para mostrar contato
-  static void mostrarContato(String telefone, String? email) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Informações de Contato'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (telefone.isNotEmpty) ...[
-              Row(
-                children: [
-                  const Icon(Icons.phone, color: Colors.teal),
-                  const SizedBox(width: 8),
-                  Text('Telefone: $telefone'),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            if (email != null && email.isNotEmpty)
-              Row(
-                children: [
-                  const Icon(Icons.email, color: Colors.teal),
-                  const SizedBox(width: 8),
-                  Flexible(child: Text('Email: $email')),
-                ],
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Fechar')),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -235,6 +199,9 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     final createDate =
         (data['createDate'] as Timestamp?)?.toDate() ?? DateTime.now();
 
+    // Recuperar o título da vaga se existir
+    final String titulo = data['titulo'] as String? ?? '';
+
     return GestureDetector(
       onTap: () {
         Get.to(() => detalhes.DetalhesVagaPage(vagaData: data, vagaId: docId));
@@ -281,8 +248,24 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                 ],
               ),
               const SizedBox(height: 12),
+
+              // Exibir o título em destaque se estiver disponível
+              if (titulo.isNotEmpty) ...[
+                Text(
+                  titulo,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+              ],
+
               Text(
-                data['descricao'] ?? 'Sem descrição',
+                data['titulo'] ?? 'Sem titulo',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -340,36 +323,35 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                     children: [
                       if (data['telefone'] != null &&
                           data['telefone'].toString().isNotEmpty)
-                        TextButton.icon(
-                          onPressed:
-                              () => mostrarContato(
-                                data['telefone'].toString(),
-                                data['email']?.toString(),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                // TODO: Implementar método de salvar vaga
+                                // Get.snackbar(
+                                //   'Vaga Salva',
+                                //   'Vaga salva nos seus favoritos',
+                                //   backgroundColor: Colors.green,
+                                //   colorText: Colors.white,
+                                //   duration: const Duration(seconds: 2),
+                                // );
+                              },
+                              icon: Icon(
+                                Icons.bookmark_border,
+                                color: Colors.orange.shade600,
+                                size: 24,
                               ),
-                          icon: const Icon(Icons.phone, size: 18),
-                          label: const Text('Contato'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.teal,
-                          ),
+                              tooltip: 'Salvar vaga',
+                            ),
+                            Text(
+                              'Salvar Vaga',
+                              style: TextStyle(
+                                color: Colors.orange.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
-                      IconButton(
-                        onPressed: () {
-                          // TODO: Implementar método de salvar vaga
-                          // Get.snackbar(
-                          //   'Vaga Salva',
-                          //   'Vaga salva nos seus favoritos',
-                          //   backgroundColor: Colors.green,
-                          //   colorText: Colors.white,
-                          //   duration: const Duration(seconds: 2),
-                          // );
-                        },
-                        icon: Icon(
-                          Icons.bookmark_border,
-                          color: Colors.orange.shade600,
-                          size: 24,
-                        ),
-                        tooltip: 'Salvar vaga',
-                      ),
                     ],
                   ),
                   ElevatedButton(

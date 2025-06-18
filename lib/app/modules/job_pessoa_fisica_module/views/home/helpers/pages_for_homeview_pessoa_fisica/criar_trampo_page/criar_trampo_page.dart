@@ -16,7 +16,7 @@ class _CriarPageState extends State<CriarPage> {
   final TramposController _tramposController = Get.find<TramposController>();
   final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _tituloController = TextEditingController();
-  final TextEditingController _salarioController = TextEditingController(); //
+  final TextEditingController _salarioController = TextEditingController();
   final TextEditingController _requisitosController = TextEditingController();
   final TextEditingController _exigenciasController = TextEditingController();
   final TextEditingController _valorizadoController = TextEditingController();
@@ -26,6 +26,7 @@ class _CriarPageState extends State<CriarPage> {
   final List<String> _exigencias = [];
   final List<String> _valorizados = [];
   final List<String> _beneficios = [];
+  final List<String> _requisitos = [];
 
   String? _tipoVagaSelecionado;
   String? _modalidadeSelecionada;
@@ -33,8 +34,8 @@ class _CriarPageState extends State<CriarPage> {
 
   final List<String> _tiposVaga = [
     'Bico',
-    'PJ (Pessoa Jurídica)',
-    'CLT (Consolidação das Leis do Trabalho)',
+    'PJ',
+    'CLT',
     'Freelancer',
     'Estágio',
     'Temporário',
@@ -54,10 +55,10 @@ class _CriarPageState extends State<CriarPage> {
     _telefoneController.clear();
     _tituloController.clear();
     _salarioController.clear();
-    _requisitosController.clear();
     _exigenciasController.clear();
     _valorizadoController.clear();
     _benificiosController.clear();
+    _requisitos.clear();
     setState(() {
       _tipoVagaSelecionado = null;
       _modalidadeSelecionada = null;
@@ -598,50 +599,14 @@ class _CriarPageState extends State<CriarPage> {
                 },
               ),
               const SizedBox(height: 8),
-
-              Center(
-                child: Text(
-                  'Requisitos da Vaga',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
+              _buildTagInput(
+                'Requisitos',
+                'Digite os requisitos e pressione adicionar',
+                _requisitosController,
+                _requisitos,
+                _adicionarItem,
+                _removerItem,
               ),
-              const SizedBox(height: 8),
-              Container(
-                constraints: const BoxConstraints(
-                  minHeight: 120,
-                  maxHeight: 200,
-                ),
-                child: TextFormField(
-                  controller: _requisitosController,
-                  minLines: 3,
-                  maxLines: 6,
-                  maxLength: 500,
-                  decoration: InputDecoration(
-                    hintText: 'Descreva detalhadamente os requisitos da vaga.',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor:
-                        isDark ? Colors.grey.shade800 : Colors.grey.shade50,
-                    alignLabelWithHint: true,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Por favor, descreva os requisitos da vaga.';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // SUBSTITUA os campos simples pelos campos de tags abaixo
               _buildTagInput(
                 'Exigências',
                 'Digite uma exigência e pressione adicionar',
@@ -715,9 +680,27 @@ class _CriarPageState extends State<CriarPage> {
                                       descricao: _descricaoController.text,
                                       tipoVaga: _tipoVagaSelecionado!,
                                       telefone: _telefoneController.text,
-                                      exigencias: _exigencias,
-                                      valorizados: _valorizados,
-                                      beneficios: _beneficios,
+                                      exigencias: List<String>.from(
+                                        _exigencias,
+                                      ), // Forçar cópia da lista
+                                      valorizados: List<String>.from(
+                                        _valorizados,
+                                      ), // Forçar cópia da lista
+                                      beneficios: List<String>.from(
+                                        _beneficios,
+                                      ), // Forçar cópia da lista
+                                      requisitos: List<String>.from(
+                                        _requisitos,
+                                      ),
+                                      titulo: _tituloController.text,
+                                      modalidade:
+                                          _modalidadeSelecionada ??
+                                          'Presencial',
+                                      salario:
+                                          _salarioACombinar
+                                              ? 'A combinar'
+                                              : _salarioController.text,
+                                      salarioACombinar: _salarioACombinar,
                                     );
                                     _limparFormulario();
                                   } else if (_tipoVagaSelecionado == null) {

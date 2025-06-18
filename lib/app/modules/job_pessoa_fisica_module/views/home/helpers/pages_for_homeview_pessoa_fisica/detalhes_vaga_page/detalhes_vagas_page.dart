@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
-import 'package:url_launcher/url_launcher.dart'; // Adicione esta dependência no pubspec.yaml
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhe_vaga_page_helpers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetalhesVagaPage extends StatefulWidget {
   final Map<String, dynamic> vagaData;
@@ -105,10 +106,10 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
                   ),
                 ],
 
-                if (telefone.isNotEmpty && email != null && email.isNotEmpty)
+                if (telefone.isNotEmpty && email.isNotEmpty)
                   const Divider(height: 32),
 
-                if (email != null && email.isNotEmpty) ...[
+                if (email.isNotEmpty) ...[
                   const Text(
                     'Email:',
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -180,6 +181,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
       _copiarTexto(telefone, 'Erro ao tentar ligar. Número copiado.');
       debugPrint('Erro ao tentar fazer ligação: $e');
     }
+    // ignore: use_build_context_synchronously
     Navigator.of(context).pop(); // Fecha o diálogo após a ação
   }
 
@@ -202,6 +204,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
     try {
       if (await canLaunchUrl(whatsappUri)) {
         await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+        // ignore: use_build_context_synchronously
         Navigator.of(context).pop(); // Fecha o diálogo após abrir o WhatsApp
       } else {
         // Se não conseguir abrir o WhatsApp, exibe mensagem e copia o número
@@ -209,11 +212,13 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
           telefone,
           'Não foi possível abrir o WhatsApp. Número copiado.',
         );
+        // ignore: use_build_context_synchronously
         Navigator.of(context).pop();
       }
     } catch (e) {
       _copiarTexto(telefone, 'Erro ao tentar abrir WhatsApp. Número copiado.');
       debugPrint('Erro ao tentar abrir WhatsApp: $e');
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
     }
   }
@@ -244,6 +249,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
       _copiarTexto(email, 'Erro ao tentar enviar email. Endereço copiado.');
       debugPrint('Erro ao tentar enviar email: $e');
     }
+    // ignore: use_build_context_synchronously
     Navigator.of(context).pop(); // Fecha o diálogo após a ação
   }
 
@@ -258,7 +264,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
     );
   }
 
-  void _mostrarMensagemWhatsApp(String telefone) {
+  void mostrarMensagemWhatsApp(String telefone) {
     final TextEditingController mensagemController = TextEditingController();
     mensagemController.text =
         'Olá! Vi sua vaga "${widget.vagaData['tipoVaga']}" no Trampos BR e tenho interesse.';
@@ -342,9 +348,28 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Extraindo dados adicionais
+    final String titulo = widget.vagaData['titulo'] as String? ?? '';
+    final String modalidade =
+        widget.vagaData['modalidade'] as String? ?? 'Não especificada';
+    final String salario =
+        widget.vagaData['salario'] as String? ?? 'Não informado';
+    final String telefone = widget.vagaData['telefone']?.toString() ?? '';
+    final String email = widget.vagaData['email']?.toString() ?? '';
+
+    // Recuperando listas
+    final List<dynamic> requisitos =
+        widget.vagaData['requisitos'] as List<dynamic>? ?? [];
+    final List<dynamic> exigencias =
+        widget.vagaData['exigencias'] as List<dynamic>? ?? [];
+    final List<dynamic> valorizados =
+        widget.vagaData['valorizados'] as List<dynamic>? ?? [];
+    final List<dynamic> beneficios =
+        widget.vagaData['beneficios'] as List<dynamic>? ?? [];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes da Vaga'),
+        title: Text(titulo.isNotEmpty ? titulo : 'Detalhes da Vaga'),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
@@ -352,7 +377,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
             icon: const Icon(Icons.share),
             onPressed: () {
               final texto = '''
-${widget.vagaData['tipoVaga'] ?? 'Vaga'}
+${titulo.isNotEmpty ? titulo : widget.vagaData['tipoVaga'] ?? 'Vaga'}
 
 ${widget.vagaData['descricao'] ?? 'Sem descrição'}
 
@@ -386,14 +411,24 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.vagaData['tipoVaga'] ?? 'Trampo',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                  if (titulo.isNotEmpty)
+                    Text(
+                      titulo,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    )
+                  else
+                    Text(
+                      widget.vagaData['tipoVaga'] ?? 'Trampo',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -413,22 +448,34 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
                     status: widget.vagaData['status'] ?? 'Disponível',
                   ),
                   const SizedBox(height: 16),
-                  _buildInfoRow(
+                  DetalheVagaPageHelpers.buildInfoRow(
                     'Tipo da Vaga',
                     widget.vagaData['tipoVaga'] ?? 'Não especificado',
                     Icons.work_outline,
                     isDark,
                   ),
-                  _buildInfoRow(
+                  DetalheVagaPageHelpers.buildInfoRow(
+                    'Modalidade',
+                    modalidade,
+                    _getModalidadeIcon(modalidade),
+                    isDark,
+                  ),
+                  DetalheVagaPageHelpers.buildInfoRow(
                     'Status',
                     widget.vagaData['status'] ?? 'Disponível',
                     Icons.flag,
                     isDark,
                   ),
-                  _buildInfoRow(
+                  DetalheVagaPageHelpers.buildInfoRow(
                     'Data de Publicação',
                     _formatarData(widget.vagaData['createDate']),
                     Icons.calendar_today,
+                    isDark,
+                  ),
+                  DetalheVagaPageHelpers.buildInfoRow(
+                    'Salário',
+                    salario,
+                    Icons.payments_outlined,
                     isDark,
                   ),
                 ],
@@ -444,20 +491,51 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
               isDark,
             ),
 
-            // Contato
-            if (widget.vagaData['telefone'] != null &&
-                widget.vagaData['telefone'].toString().isNotEmpty)
-              _buildSection(
-                'Contato',
-                widget.vagaData['telefone'].toString(),
+            // Listas de informações adicionais
+            if (requisitos.isNotEmpty)
+              DetalheVagaPageHelpers.buildListSection(
+                'Requisitos',
+                requisitos.cast<String>(),
                 isDark,
-                icon: Icons.phone,
+                Icons.assignment_outlined,
+              ),
+
+            if (exigencias.isNotEmpty)
+              DetalheVagaPageHelpers.buildListSection(
+                'Exigências',
+                exigencias.cast<String>(),
+                isDark,
+                Icons.check_circle_outline,
+              ),
+
+            if (valorizados.isNotEmpty)
+              DetalheVagaPageHelpers.buildListSection(
+                'Valorizado',
+                valorizados.cast<String>(),
+                isDark,
+                Icons.star_outline,
+              ),
+
+            if (beneficios.isNotEmpty)
+              DetalheVagaPageHelpers.buildListSection(
+                'Benefícios',
+                beneficios.cast<String>(),
+                isDark,
+                Icons.card_giftcard,
+              ),
+
+            // Contato
+            if (telefone.isNotEmpty || email.isNotEmpty)
+              DetalheVagaPageHelpers.buildContatoSection(
+                telefone,
+                email,
+                isDark,
               ),
 
             const SizedBox(height: 20),
 
             // Dicas para candidatura
-            _buildTipsCard(isDark),
+            DetalheVagaPageHelpers.buildTipsCard(isDark),
 
             const SizedBox(height: 30),
 
@@ -495,6 +573,21 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
         ),
       ),
     );
+  }
+
+  // Método para obter ícone baseado na modalidade
+  IconData _getModalidadeIcon(String modalidade) {
+    switch (modalidade.toLowerCase()) {
+      case 'presencial':
+        return Icons.business_center;
+      case 'remoto':
+        return Icons.computer;
+      case 'híbrido':
+      case 'hibrido':
+        return Icons.home_work;
+      default:
+        return Icons.work_outline;
+    }
   }
 
   Widget _buildSection(
@@ -548,79 +641,6 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, IconData icon, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.teal, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTipsCard(bool isDark) {
-    return Card(
-      color: isDark ? Colors.grey.shade800 : Colors.white,
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.checklist, color: Colors.teal, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Dicas para Candidatura',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildTipItem('📋 Leia toda a descrição da vaga'),
-            _buildTipItem('📞 Entre em contato pelo telefone ou WhatsApp'),
-            _buildTipItem('💬 Seja claro sobre sua experiência'),
-            _buildTipItem('🕐 Respeite os horários de contato'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTipItem(String tip) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(tip, style: const TextStyle(fontSize: 14)),
     );
   }
 }
