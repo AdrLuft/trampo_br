@@ -9,7 +9,7 @@ class TramposEntiti {
   final String? userAddress;
   final String descricao;
   final String? userId;
-  final List<String> requisitos; // Alterado de String para List<String>
+  final List<String> requisitos;
   final String titulo;
   final String modalidade;
   final String salario;
@@ -29,7 +29,7 @@ class TramposEntiti {
     required this.userAddress,
     required this.descricao,
     required this.userId,
-    this.requisitos = const [], // Alterado para lista com valor padrão
+    this.requisitos = const [],
     this.titulo = '',
     this.modalidade = 'Presencial',
     this.salario = '',

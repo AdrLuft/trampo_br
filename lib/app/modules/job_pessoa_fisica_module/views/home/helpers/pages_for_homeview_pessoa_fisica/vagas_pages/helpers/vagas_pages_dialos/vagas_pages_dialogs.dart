@@ -177,7 +177,7 @@ class VagasPagesDialogs {
             ),
             const SizedBox(height: 12),
             Text(
-              vaga.descricao,
+              vaga.titulo,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -233,17 +233,6 @@ class VagasPagesDialogs {
               children: [
                 Row(
                   children: [
-                    if (vaga.telefone.isNotEmpty)
-                      TextButton.icon(
-                        onPressed:
-                            () => mostrarContato(vaga.telefone, vaga.email),
-                        icon: const Icon(Icons.phone, size: 18),
-                        label: const Text('Contato'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.teal,
-                        ),
-                      ),
-
                     TextButton.icon(
                       onPressed:
                           () => controller.alterStatusTrampo(
@@ -251,25 +240,10 @@ class VagasPagesDialogs {
                             vaga.status,
                             vaga.userId ?? '',
                           ),
-                      icon: Icon(
-                        vaga.status.toLowerCase() == 'disponivel' ||
-                                vaga.status.toLowerCase() == 'disponível'
-                            ? Icons.close
-                            : Icons.check_circle,
-                        size: 18,
-                      ),
-                      label: Text(
-                        vaga.status.toLowerCase() == 'disponivel' ||
-                                vaga.status.toLowerCase() == 'disponível'
-                            ? 'Encerrar'
-                            : 'Reabrir',
-                      ),
+                      icon: Icon(_getStatusIcon(vaga.status), size: 18),
+                      label: Text(_getStatusActionText(vaga.status)),
                       style: TextButton.styleFrom(
-                        foregroundColor:
-                            vaga.status.toLowerCase() == 'disponivel' ||
-                                    vaga.status.toLowerCase() == 'disponível'
-                                ? Colors.orange
-                                : Colors.green,
+                        foregroundColor: _getStatusActionColor(vaga.status),
                       ),
                     ),
                   ],
@@ -287,5 +261,51 @@ class VagasPagesDialogs {
         ),
       ),
     );
+  }
+
+  // Adicionar estas funções auxiliares no escopo da classe
+  static IconData _getStatusIcon(String status) {
+    // Normalizar o status para comparação
+    String normalizado = status
+        .toLowerCase()
+        .replaceAll('í', 'i')
+        .replaceAll('é', 'e');
+
+    if (normalizado.contains('disponivel') ||
+        normalizado.contains('disponível')) {
+      return Icons.close; // Ícone para encerrar vaga
+    } else {
+      return Icons.refresh; // Ícone para reabrir vaga
+    }
+  }
+
+  static String _getStatusActionText(String status) {
+    // Normalizar o status para comparação
+    String normalizado = status
+        .toLowerCase()
+        .replaceAll('í', 'i')
+        .replaceAll('é', 'e');
+
+    if (normalizado.contains('disponivel') ||
+        normalizado.contains('disponível')) {
+      return 'Encerrar Vaga';
+    } else {
+      return 'Reabrir Vaga';
+    }
+  }
+
+  static Color _getStatusActionColor(String status) {
+    // Normalizar o status para comparação
+    String normalizado = status
+        .toLowerCase()
+        .replaceAll('í', 'i')
+        .replaceAll('é', 'e');
+
+    if (normalizado.contains('disponivel') ||
+        normalizado.contains('disponível')) {
+      return Colors.orange;
+    } else {
+      return Colors.green;
+    }
   }
 }

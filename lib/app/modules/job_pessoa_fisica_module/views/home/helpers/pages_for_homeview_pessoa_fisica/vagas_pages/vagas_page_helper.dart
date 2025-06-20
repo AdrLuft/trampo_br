@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_pages_dialos/vagas_pages_dialogs.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/helpers/editar_minhas_vagas_page.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/helpers/vagas_pages_dialos/vagas_pages_dialogs.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhes_vagas_page.dart'
     as detalhes;
 
@@ -17,6 +18,11 @@ class VagasPage extends StatefulWidget {
 class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
   late TabController _tabController;
   final TramposController _controller = Get.find<TramposController>();
+  final EditarMinhasVagasPage _editarMinhasVagasPage = EditarMinhasVagasPage(
+    vagaData: {},
+    vagaId: '',
+    onSave: () {},
+  );
 
   @override
   void initState() {
@@ -183,7 +189,14 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
           itemCount: _controller.minhasVagas.length,
           itemBuilder: (context, index) {
             final vaga = _controller.minhasVagas[index];
-            return VagasPagesDialogs.buildMinhaVagaCard(vaga, isDark);
+            // Retorna um card clicável que abrirá a tela de edição
+            return GestureDetector(
+              onTap: () {
+                // Navegar para a tela de edição passando a vaga e seu ID
+                Get.to(() => _editarMinhasVagasPage);
+              },
+              child: VagasPagesDialogs.buildMinhaVagaCard(vaga, isDark),
+            );
           },
         ),
       );
@@ -199,7 +212,6 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     final createDate =
         (data['createDate'] as Timestamp?)?.toDate() ?? DateTime.now();
 
-    // Recuperar o título da vaga se existir
     final String titulo = data['titulo'] as String? ?? '';
 
     return GestureDetector(
@@ -249,7 +261,6 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 12),
 
-              // Exibir o título em destaque se estiver disponível
               if (titulo.isNotEmpty) ...[
                 Text(
                   titulo,
@@ -261,20 +272,8 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
               ],
-
-              Text(
-                data['titulo'] ?? 'Sem titulo',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Icon(

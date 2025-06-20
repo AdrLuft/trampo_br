@@ -456,9 +456,9 @@ class _InicioPage extends StatelessWidget {
 
               // Descrição
               Text(
-                data['descricao'] ?? 'Sem descrição',
+                data['titulo'] ?? 'Sem titulo',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 18,
                   color: isDark ? Colors.white70 : Colors.grey.shade700,
                   height: 1.3,
                 ),

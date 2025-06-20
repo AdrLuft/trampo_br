@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/trampos_entiti.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/trampos_repository_abstract.dart';
@@ -39,13 +40,10 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
       }
 
       // Garantir que as listas nunca sejam nulas
-      List<String> requisitosList = agendamento.requisitos?.toList() ?? [];
-      List<String> exigenciasList = agendamento.exigencias?.toList() ?? [];
-      List<String> valorizadosList = agendamento.valorizados?.toList() ?? [];
-      List<String> beneficiosList = agendamento.beneficios?.toList() ?? [];
-
-      // Log para debug
-      print("Requisitos a serem salvos: $requisitosList");
+      List<String> requisitosList = agendamento.requisitos.toList();
+      List<String> exigenciasList = agendamento.exigencias.toList();
+      List<String> valorizadosList = agendamento.valorizados.toList();
+      List<String> beneficiosList = agendamento.beneficios.toList();
 
       final trampoData = {
         'userId': user,
@@ -181,16 +179,40 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
       if (currentUserId.isEmpty) {
         return [];
       }
-
-      DocumentReference userRef = firestore.doc('users/$currentUserId');
+      // debugPrint('Buscando trampos para o usuário: $currentUserId');
       QuerySnapshot querySnapshot =
           await firestore
               .collection('Trampos')
-              .where('userId', isEqualTo: userRef)
+              .where('userId', isEqualTo: currentUserId)
               .orderBy('createDate', descending: true)
               .get();
+      //   debugPrint('Trampos encontrados: ${querySnapshot.docs.length}');
       return querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
+        List<String> requisitosList = [];
+        if (data['requisitos'] != null) {
+          if (data['requisitos'] is List) {
+            requisitosList = List<String>.from(data['requisitos']);
+          } else if (data['requisitos'] is String) {
+            requisitosList = [data['requisitos']];
+          }
+        }
+
+        List<String> exigenciasList = [];
+        if (data['exigencias'] != null && data['exigencias'] is List) {
+          exigenciasList = List<String>.from(data['exigencias']);
+        }
+
+        List<String> valorizadosList = [];
+        if (data['valorizados'] != null && data['valorizados'] is List) {
+          valorizadosList = List<String>.from(data['valorizados']);
+        }
+
+        List<String> beneficiosList = [];
+        if (data['beneficios'] != null && data['beneficios'] is List) {
+          beneficiosList = List<String>.from(data['beneficios']);
+        }
+
         return TramposEntiti(
           id: doc.id,
           createTrampoNome: data['createTrampoNome'] ?? '',
@@ -202,11 +224,18 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
           userAddress: data['userAddress'] ?? '',
           descricao: data['descricao'] ?? '',
           userId: currentUserId,
-          requisitos: data['requisitos'] ?? '',
+          requisitos: requisitosList,
+          exigencias: exigenciasList,
+          valorizados: valorizadosList,
+          beneficios: beneficiosList,
+          titulo: data['titulo'] ?? '',
+          modalidade: data['modalidade'] ?? 'Presencial',
+          salario: data['salario'] ?? '',
+          salarioACombinar: data['salarioACombinar'] ?? false,
         );
       }).toList();
     } catch (e) {
-      rethrow;
+      throw ('Erro ao buscar minhas vagas: $e');
     }
   }
 
@@ -219,7 +248,8 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
     CollectionReference tramposCollection = firestore.collection('Trampos');
     return tramposCollection.doc(idTrampo).update({
       'status': novoStatus,
-      'userId': firestore.doc('users/$userId'),
+      // Não alteramos o formato do userId, mantendo-o como string
+      // 'userId': firestore.doc('users/$userId'),
     });
   }
 }
