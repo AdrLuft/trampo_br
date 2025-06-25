@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/aplications/usecases/agendamento_usecases/trampos_listner_usecases.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/trampos_entiti.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/trampos_repository_abstract.dart';
 
@@ -27,8 +28,6 @@ class TramposController extends GetxController {
     carregarVagasSalvas();
   }
 
-  //=======================================================================================================================
-
   Future<void> createTrampo({
     required String descricao,
     required String tipoVaga,
@@ -42,71 +41,33 @@ class TramposController extends GetxController {
     String salario = '',
     bool salarioACombinar = false,
   }) async {
-    if (descricao.trim().isEmpty) {
-      Get.snackbar(
-        'Entrada Inválida',
-        'A descrição não pode estar vazia.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
-      );
-      return;
-    }
     isLoading.value = true;
 
     try {
-      final String userId = auth.currentUser?.uid ?? '';
-      final String userEmail = auth.currentUser?.email ?? '';
-
-      if (userId.isEmpty) {
-        throw Exception('Usuário não autenticado');
-      }
-      String valorSalario = salarioACombinar ? 'A combinar' : salario;
       final novoTrampo = TramposEntiti(
         id: '',
-        descricao: descricao.trim(),
-        createTrampoNome: '',
-        tipoVaga: tipoVaga,
-        createDate: DateTime.now().toIso8601String(),
-        status: 'Disponivel',
-        email: userEmail,
-        telefone: telefone.trim(),
-        userAddress: '',
-        userId: userId,
         titulo: titulo,
-        modalidade: modalidade,
-        salario: valorSalario,
+        descricao: descricao,
+        telefone: telefone,
+        salario: salario,
         salarioACombinar: salarioACombinar,
-        exigencias: List<String>.from(exigencias),
-        valorizados: List<String>.from(valorizados),
-        beneficios: List<String>.from(beneficios),
-        requisitos: List<String>.from(requisitos),
+        tipoVaga: tipoVaga,
+        modalidade: modalidade,
+        status: 'Disponivel',
+        createDate: DateTime.now().toIso8601String(),
+        email: auth.currentUser?.email ?? '',
+        userId: auth.currentUser?.uid,
+        createTrampoNome: '',
+        userAddress: '',
+        requisitos: requisitos.toList(),
+        exigencias: exigencias.toList(),
+        valorizados: valorizados.toList(),
+        beneficios: beneficios.toList(),
       );
-      debugPrint('Criando trampo: ${novoTrampo.toString()}');
+      // 2. Chama o repositório com a entidade pronta.
       await _repository.createTrampo(novoTrampo);
-
-      Get.snackbar(
-        'Sucesso!',
-        'A vaga foi criada e já está disponível.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 1),
-      );
     } catch (e) {
-      debugPrint('Erro detalhado ao criar trampo: $e');
-      debugPrint('Tipo do erro: ${e.runtimeType}');
-      if (e is FirebaseException) {
-        debugPrint('Código do erro Firebase: ${e.code}');
-        debugPrint('Mensagem do erro Firebase: ${e.message}');
-      }
-
-      Get.snackbar(
-        'Operação Falhou',
-        'Não foi possível criar a vaga. Erro: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Erro ao Criar Vaga', e.toString());
     } finally {
       isLoading.value = false;
     }
@@ -186,61 +147,41 @@ class TramposController extends GetxController {
 
   //=======================================================================================================================
 
-  Future<void> salvarVaga(Map<String, dynamic> vagaData) async {
+  Future<void> salvarVaga(TramposEntiti trampo) async {
+    final userId = auth.currentUser?.uid;
+
     try {
-      final jaExiste = vagasSalvas.any((vaga) => vaga['id'] == vagaData['id']);
+      final jaExiste = vagasSalvas.any((vaga) => vaga['id'] == trampo.id);
 
       if (jaExiste) {
-        Get.snackbar(
-          'Vaga já salva',
-          'Esta vaga já está nos seus favoritos',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
+        Get.snackbar('Atenção', 'Esta vaga já está na sua lista.');
         return;
       }
 
-      vagaData['dataSalvamento'] = DateTime.now().toIso8601String();
-      vagasSalvas.add(vagaData);
-      await _salvarVagasLocal();
+      final model = CreateTramposModel.fromEntity(trampo);
+      final vagaData = model.toJson();
 
-      Get.snackbar(
-        'Vaga Salva',
-        'Vaga adicionada aos seus favoritos',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
+      vagaData['dataSalvamento'] = Timestamp.now();
+      vagaData['id'] = trampo.id;
+      vagasSalvas.add(vagaData);
+      await _repository.sincronizarVagasSalvasComFirestore(userId!);
+
+      Get.snackbar('Sucesso', 'Vaga salva nos seus favoritos.');
     } catch (e) {
-      Get.snackbar(
-        'Erro',
-        'Erro ao salvar vaga: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Erro', 'Não foi possível salvar a vaga: $e');
     }
   }
 
-  Future<void> removerVagaSalva(Map<String, dynamic> vagaData) async {
+  Future<void> removerVagaSalva(TramposEntiti trampo) async {
+    final userId = auth.currentUser?.uid;
     try {
-      vagasSalvas.removeWhere((vaga) => vaga['id'] == vagaData['id']);
-      await _salvarVagasLocal();
+      vagasSalvas.removeWhere((vaga) => vaga['id'] == trampo.id);
 
-      Get.snackbar(
-        'Vaga Removida',
-        'Vaga removida dos seus favoritos',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
+      await _repository.sincronizarVagasSalvasComFirestore(userId!);
+
+      Get.snackbar('Vaga Removida', 'A vaga foi removida dos seus favoritos.');
     } catch (e) {
-      Get.snackbar(
-        'Erro',
-        'Erro ao remover vaga: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Erro', 'Não foi possível remover a vaga: $e');
     }
   }
 
@@ -260,33 +201,6 @@ class TramposController extends GetxController {
           doc.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
     } catch (e) {
       debugPrint('Erro ao carregar vagas salvas: $e');
-    }
-  }
-
-  Future<void> _salvarVagasLocal() async {
-    try {
-      final userId = auth.currentUser?.uid;
-      if (userId == null) return;
-
-      final batch = firestore.batch();
-      final collection = firestore
-          .collection('usuarios')
-          .doc(userId)
-          .collection('vagasSalvas');
-
-      final existingDocs = await collection.get();
-      for (final doc in existingDocs.docs) {
-        batch.delete(doc.reference);
-      }
-
-      for (final vaga in vagasSalvas) {
-        final docRef = collection.doc(vaga['id']);
-        batch.set(docRef, vaga);
-      }
-
-      await batch.commit();
-    } catch (e) {
-      debugPrint('Erro ao salvar vagas localmente: $e');
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/helpers/editar_minhas_vagas_page.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/helpers/vagas_pages_dialos/vagas_pages_dialogs.dart';
@@ -326,18 +327,17 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                           children: [
                             IconButton(
                               onPressed: () {
-                                // TODO: Implementar método de salvar vaga
-                                // Get.snackbar(
-                                //   'Vaga Salva',
-                                //   'Vaga salva nos seus favoritos',
-                                //   backgroundColor: Colors.green,
-                                //   colorText: Colors.white,
-                                //   duration: const Duration(seconds: 2),
-                                // );
+                                final vagaEntity =
+                                    CreateTramposModel.fromJson({
+                                      'id': docId,
+                                      ...data,
+                                    }).toEntity();
+
+                                _controller.salvarVaga(vagaEntity);
                               },
                               icon: Icon(
                                 Icons.bookmark_border,
-                                color: Colors.orange.shade600,
+                                color: Colors.teal,
                                 size: 24,
                               ),
                               tooltip: 'Salvar vaga',
@@ -345,7 +345,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                             Text(
                               'Salvar Vaga',
                               style: TextStyle(
-                                color: Colors.orange.shade600,
+                                color: Colors.grey,
                                 fontSize: 14,
                               ),
                             ),

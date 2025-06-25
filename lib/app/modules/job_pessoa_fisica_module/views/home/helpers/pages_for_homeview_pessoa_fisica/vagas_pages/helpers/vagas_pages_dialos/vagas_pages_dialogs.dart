@@ -55,44 +55,6 @@ class VagasPagesDialogs {
       return '${data.day}/${data.month}/${data.year}';
     }
 
-    void mostrarContato(String telefone, String? email) {
-      Get.dialog(
-        AlertDialog(
-          title: const Text('Informações de Contato'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (telefone.isNotEmpty) ...[
-                Row(
-                  children: [
-                    const Icon(Icons.phone, color: Colors.teal),
-                    const SizedBox(width: 8),
-                    Text('Telefone: $telefone'),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-              if (email != null && email.isNotEmpty)
-                Row(
-                  children: [
-                    const Icon(Icons.email, color: Colors.teal),
-                    const SizedBox(width: 8),
-                    Flexible(child: Text('Email: $email')),
-                  ],
-                ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('Fechar'),
-            ),
-          ],
-        ),
-      );
-    }
-
     void confirmarExclusao(String vagaId) {
       Get.dialog(
         AlertDialog(

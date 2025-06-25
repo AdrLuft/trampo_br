@@ -673,10 +673,10 @@ class _CriarPageState extends State<CriarPage> {
                         onPressed:
                             _tramposController.isLoading.value
                                 ? null
-                                : () {
+                                : () async {
                                   if (_formKey.currentState!.validate() &&
                                       _tipoVagaSelecionado != null) {
-                                    _tramposController.createTrampo(
+                                    await _tramposController.createTrampo(
                                       descricao: _descricaoController.text,
                                       tipoVaga: _tipoVagaSelecionado!,
                                       telefone: _telefoneController.text,
@@ -702,12 +702,46 @@ class _CriarPageState extends State<CriarPage> {
                                               : _salarioController.text,
                                       salarioACombinar: _salarioACombinar,
                                     );
+
                                     _limparFormulario();
-                                  } else if (_tipoVagaSelecionado == null) {
-                                    Get.snackbar(
-                                      'Atenção',
-                                      'Selecione um tipo de vaga.',
+
+                                    // Show success message
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Trampo criado com sucesso!',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                        duration: Duration(seconds: 2),
+                                      ),
                                     );
+                                  } else {
+                                    // Show error if form is invalid or job type not selected
+                                    if (_tipoVagaSelecionado == null) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Por favor, selecione o tipo de vaga',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          duration: Duration(seconds: 1),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Por favor, verifique os campos obrigatórios',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          duration: Duration(seconds: 1),
+                                        ),
+                                      );
+                                    }
                                   }
                                 },
                         child:

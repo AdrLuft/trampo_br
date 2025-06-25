@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/trampos_entiti.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/trampos_repository_abstract.dart';
@@ -8,91 +7,14 @@ import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/
 class TramposRepositoryImp implements TramposRepositoryAbstract {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
+  final vagasSalvas = <Map<String, dynamic>>[];
 
   @override
-  Future<TramposEntiti> createTrampo(TramposEntiti agendamento) async {
-    try {
-      final String user = auth.currentUser?.uid ?? '';
-
-      if (user.isEmpty) {
-        throw Exception('Usuário não autenticado');
-      }
-
-      DocumentSnapshot userDoc =
-          await firestore.collection('users').doc(user).get();
-
-      if (!userDoc.exists) {
-        throw Exception('Dados do usuário não encontrados');
-      }
-
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-      String userName = userData['name'] ?? '';
-      String userAddress = userData['address'] ?? '';
-      String userEmail = userData['email'] ?? agendamento.email;
-
-      CollectionReference tramposCollection = firestore.collection('Trampos');
-
-      DateTime createDateTime;
-      try {
-        createDateTime = DateTime.parse(agendamento.createDate);
-      } catch (e) {
-        createDateTime = DateTime.now();
-      }
-
-      // Garantir que as listas nunca sejam nulas
-      List<String> requisitosList = agendamento.requisitos.toList();
-      List<String> exigenciasList = agendamento.exigencias.toList();
-      List<String> valorizadosList = agendamento.valorizados.toList();
-      List<String> beneficiosList = agendamento.beneficios.toList();
-
-      final trampoData = {
-        'userId': user,
-        'createTrampoNome': userName,
-        'userAddress': userAddress,
-        'email': userEmail,
-        'telefone': agendamento.telefone,
-        'createDate': Timestamp.fromDate(createDateTime),
-        'tipoVaga': agendamento.tipoVaga,
-        'status': agendamento.status,
-        'descricao': agendamento.descricao.trim(),
-        'requisitos': requisitosList,
-        'exigencias': exigenciasList,
-        'valorizados': valorizadosList,
-        'beneficios': beneficiosList,
-        'titulo': agendamento.titulo,
-        'modalidade': agendamento.modalidade,
-        'salario':
-            agendamento.salarioACombinar ? 'A combinar' : agendamento.salario,
-      };
-
-      DocumentReference docRef = await tramposCollection.add(trampoData);
-
-      final CreateTramposModel model = CreateTramposModel(
-        id: docRef.id,
-        createTrampoNome: userName,
-        createDate: agendamento.createDate,
-        status: agendamento.status,
-        tipoVaga: agendamento.tipoVaga,
-        email: userEmail,
-        telefone: agendamento.telefone,
-        userAddress: userAddress,
-        descricao: agendamento.descricao.trim(),
-        userId: user,
-        requisitos: agendamento.requisitos,
-        exigencias: agendamento.exigencias,
-        valorizados: agendamento.valorizados,
-        beneficios: agendamento.beneficios,
-        titulo: agendamento.titulo,
-        modalidade: agendamento.modalidade,
-        salario:
-            agendamento.salarioACombinar ? 'A combinar' : agendamento.salario,
-        salarioACombinar: agendamento.salarioACombinar,
-      );
-
-      return model.toEntity();
-    } catch (e) {
-      rethrow;
-    }
+  Future<TramposEntiti> createTrampo(TramposEntiti trampo) async {
+    final model = CreateTramposModel.fromEntity(trampo);
+    final trampoData = model.toJson();
+    final docRef = await firestore.collection('Trampos').add(trampoData);
+    return model.copyWith(id: docRef.id).toEntity();
   }
 
   @override
@@ -131,18 +53,12 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
   }
 
   @override
-  Future<void> updateTrampos(TramposEntiti agendamento) async {
-    CollectionReference agendamentosCollection = firestore.collection(
-      'Trampos',
-    );
-    await agendamentosCollection.doc(agendamento.id).update({
-      'createTrampoNome': agendamento.createTrampoNome,
-      'email': agendamento.email,
-      'telefone': agendamento.telefone,
-      'data': Timestamp.fromDate(DateTime.parse(agendamento.createDate)),
-      'tipoVaga': agendamento.tipoVaga,
-      'status': agendamento.status,
-    });
+  Future<void> updateTrampos(TramposEntiti trampos) async {
+    final model = CreateTramposModel.fromEntity(trampos);
+    await firestore
+        .collection('Trampos')
+        .doc(trampos.id)
+        .update(model.toJson());
   }
 
   @override
@@ -251,5 +167,30 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
       // Não alteramos o formato do userId, mantendo-o como string
       // 'userId': firestore.doc('users/$userId'),
     });
+  }
+
+  @override
+  Future<void> sincronizarVagasSalvasComFirestore(userId) async {
+    final userId = auth.currentUser?.uid;
+    if (userId == null) return;
+
+    final collectionRef = firestore
+        .collection('usuarios')
+        .doc(userId)
+        .collection('vagasSalvas');
+    final batch = firestore.batch();
+
+    // Limpa a coleção remota primeiro
+    final snapshot = await collectionRef.get();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    // Adiciona todos os itens da lista local `vagasSalvas`
+    for (final vaga in vagasSalvas) {
+      final docRef = collectionRef.doc(vaga['id']);
+      batch.set(docRef, vaga);
+    }
+
+    await batch.commit();
   }
 }
