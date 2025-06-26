@@ -8,5 +8,6 @@ abstract class TramposRepositoryAbstract {
   Future<TramposEntiti?> getTrampoById(String id);
   Future<List<TramposEntiti>> getMiTrampos();
   Future<void> updateTrampoStatus(String id, String status, String userId);
-  Future<void> sincronizarVagasSalvasComFirestore(String userId);
+  Future<void> salvarVagaFavoritos(String userId, String id);
+  Future<void> removerVagaSalva(String userId, String id);
 }

@@ -333,7 +333,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                                       ...data,
                                     }).toEntity();
 
-                                _controller.salvarVaga(vagaEntity);
+                                _controller.salvarVagaFavoritos(vagaEntity);
                               },
                               icon: Icon(
                                 Icons.bookmark_border,

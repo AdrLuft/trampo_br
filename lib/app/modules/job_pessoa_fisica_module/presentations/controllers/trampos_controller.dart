@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
+import 'package:interprise_calendar/app/core/widgets/widgets_custom/mesages_custom.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/aplications/usecases/agendamento_usecases/trampos_listner_usecases.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/trampos_entiti.dart';
@@ -73,22 +74,6 @@ class TramposController extends GetxController {
     }
   }
 
-  //=======================================================================================================================
-
-  Future<List> listarTrampos() async {
-    try {
-      isLoading.value = true;
-      return await _listarTramposUsecases();
-    } on FirebaseException catch (e) {
-      isLoading.value = false;
-      return Future.error('Erro ao listar agendamentos: $e');
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  //=======================================================================================================================
-
   Future<void> carregarMinhasVagas() async {
     try {
       isLoading.value = true;
@@ -106,21 +91,12 @@ class TramposController extends GetxController {
     }
   }
 
-  //=======================================================================================================================
-
   Future<void> deleteTrampos(String trampoId) async {
     try {
       await _repository.deleteTrampos(trampoId);
       await carregarMinhasVagas();
     } catch (e) {
-      Get.snackbar(
-        'Erro',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 10),
-        colorText: Colors.white,
-      );
+      MessageUtils.handleError(e, 'Erro ao excluir a vaga: $e');
     }
   }
 
@@ -147,14 +123,15 @@ class TramposController extends GetxController {
 
   //=======================================================================================================================
 
-  Future<void> salvarVaga(TramposEntiti trampo) async {
+  Future<void> salvarVagaFavoritos(TramposEntiti trampo) async {
     final userId = auth.currentUser?.uid;
 
     try {
       final jaExiste = vagasSalvas.any((vaga) => vaga['id'] == trampo.id);
 
       if (jaExiste) {
-        Get.snackbar('Atenção', 'Esta vaga já está na sua lista.');
+        MessageUtils.showDialogMessage('Atenção', 'Você já salvou essa vaga.');
+        Get.back();
         return;
       }
 
@@ -164,11 +141,11 @@ class TramposController extends GetxController {
       vagaData['dataSalvamento'] = Timestamp.now();
       vagaData['id'] = trampo.id;
       vagasSalvas.add(vagaData);
-      await _repository.sincronizarVagasSalvasComFirestore(userId!);
+      await _repository.salvarVagaFavoritos(userId!, trampo.id);
 
-      Get.snackbar('Sucesso', 'Vaga salva nos seus favoritos.');
+      MessageUtils.showSucessSnackbar('Sucesso', 'Vaga Salva!');
     } catch (e) {
-      Get.snackbar('Erro', 'Não foi possível salvar a vaga: $e');
+      MessageUtils.handleError(e, 'Não foi possível salvar a vaga: $e');
     }
   }
 
@@ -176,12 +153,12 @@ class TramposController extends GetxController {
     final userId = auth.currentUser?.uid;
     try {
       vagasSalvas.removeWhere((vaga) => vaga['id'] == trampo.id);
+      vagasSalvas.refresh();
+      await _repository.removerVagaSalva(userId!, trampo.id);
 
-      await _repository.sincronizarVagasSalvasComFirestore(userId!);
-
-      Get.snackbar('Vaga Removida', 'A vaga foi removida dos seus favoritos.');
+      MessageUtils.showSucessSnackbar('Sucesso', 'Vaga removida com sucesso!');
     } catch (e) {
-      Get.snackbar('Erro', 'Não foi possível remover a vaga: $e');
+      MessageUtils.handleError(e, 'Erro ao remover a vaga salva: $e');
     }
   }
 
@@ -200,7 +177,7 @@ class TramposController extends GetxController {
       vagasSalvas.value =
           doc.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
     } catch (e) {
-      debugPrint('Erro ao carregar vagas salvas: $e');
+      MessageUtils.handleError(e, 'Erro ao carregar vagas salvas: $e');
     }
   }
 }

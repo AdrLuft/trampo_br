@@ -64,25 +64,11 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
   @override
   Future<TramposEntiti?> getTrampoById(String id) async {
     final String user = auth.currentUser?.uid ?? '';
-    CollectionReference agendamentosCollection = firestore.collection(
-      'Trampos',
-    );
-    DocumentSnapshot doc = await agendamentosCollection.doc(id).get();
-
-    if (doc.exists && doc['userId'] == user) {
-      return TramposEntiti(
-        id: doc.id,
-        createTrampoNome: doc['createTrampoNome'],
-        email: doc['email'],
-        telefone: doc['telefone'],
-        createDate: (doc['createDate'] as Timestamp).toDate().toString(),
-        tipoVaga: doc['tipoVaga'],
-        status: doc['status'],
-        userAddress: doc['userAddress'],
-        descricao: doc['descricao'],
-        userId: user,
-        requisitos: doc['requisitos'] ?? '',
-      );
+    final doc = await firestore.collection('Trampos').doc(id).get();
+    if (!doc.exists && doc['userId'] != user) {
+      final data = doc.data() as Map<String, dynamic>;
+      data['id'] = doc.id;
+      return CreateTramposModel.fromJson(data).toEntity();
     }
     return null;
   }
@@ -91,64 +77,20 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
   Future<List<TramposEntiti>> getMiTrampos() async {
     try {
       final String currentUserId = auth.currentUser?.uid ?? '';
+      if (currentUserId.isEmpty) return [];
 
-      if (currentUserId.isEmpty) {
-        return [];
-      }
-      // debugPrint('Buscando trampos para o usuário: $currentUserId');
       QuerySnapshot querySnapshot =
           await firestore
               .collection('Trampos')
               .where('userId', isEqualTo: currentUserId)
               .orderBy('createDate', descending: true)
               .get();
-      //   debugPrint('Trampos encontrados: ${querySnapshot.docs.length}');
       return querySnapshot.docs.map((doc) {
+        // Pega o mapa de dados do documento.
         final data = doc.data() as Map<String, dynamic>;
-        List<String> requisitosList = [];
-        if (data['requisitos'] != null) {
-          if (data['requisitos'] is List) {
-            requisitosList = List<String>.from(data['requisitos']);
-          } else if (data['requisitos'] is String) {
-            requisitosList = [data['requisitos']];
-          }
-        }
 
-        List<String> exigenciasList = [];
-        if (data['exigencias'] != null && data['exigencias'] is List) {
-          exigenciasList = List<String>.from(data['exigencias']);
-        }
-
-        List<String> valorizadosList = [];
-        if (data['valorizados'] != null && data['valorizados'] is List) {
-          valorizadosList = List<String>.from(data['valorizados']);
-        }
-
-        List<String> beneficiosList = [];
-        if (data['beneficios'] != null && data['beneficios'] is List) {
-          beneficiosList = List<String>.from(data['beneficios']);
-        }
-
-        return TramposEntiti(
-          id: doc.id,
-          createTrampoNome: data['createTrampoNome'] ?? '',
-          email: data['email'] ?? '',
-          telefone: data['telefone'] ?? '',
-          createDate: (data['createDate'] as Timestamp).toDate().toString(),
-          tipoVaga: data['tipoVaga'] ?? '',
-          status: data['status'] ?? 'Disponível',
-          userAddress: data['userAddress'] ?? '',
-          descricao: data['descricao'] ?? '',
-          userId: currentUserId,
-          requisitos: requisitosList,
-          exigencias: exigenciasList,
-          valorizados: valorizadosList,
-          beneficios: beneficiosList,
-          titulo: data['titulo'] ?? '',
-          modalidade: data['modalidade'] ?? 'Presencial',
-          salario: data['salario'] ?? '',
-          salarioACombinar: data['salarioACombinar'] ?? false,
-        );
+        final mapaCompleto = {'id': doc.id, ...data};
+        return CreateTramposModel.fromJson(mapaCompleto).toEntity();
       }).toList();
     } catch (e) {
       throw ('Erro ao buscar minhas vagas: $e');
@@ -162,35 +104,44 @@ class TramposRepositoryImp implements TramposRepositoryAbstract {
     String userId,
   ) {
     CollectionReference tramposCollection = firestore.collection('Trampos');
-    return tramposCollection.doc(idTrampo).update({
-      'status': novoStatus,
-      // Não alteramos o formato do userId, mantendo-o como string
-      // 'userId': firestore.doc('users/$userId'),
+    return tramposCollection.doc(idTrampo).update({'status': novoStatus});
+  }
+
+  @override
+  Future<void> salvarVagaFavoritos(userId, [String? trampoId]) async {
+    final currentUserId = auth.currentUser?.uid;
+    if (currentUserId == null || trampoId == null) return;
+
+    final vagaSalvaCollection = firestore.collection('vagaSalva');
+    final docRef = vagaSalvaCollection.doc('${currentUserId}_$trampoId');
+    await docRef.set({'userId': currentUserId, 'vagaId': trampoId});
+
+    // Adiciona na coleção TramposSalvosUsers apenas a vaga salva
+    await firestore.collection('TramposSalvosUsers').add({
+      'idTrampo': trampoId,
+      'userId': currentUserId,
     });
   }
 
   @override
-  Future<void> sincronizarVagasSalvasComFirestore(userId) async {
-    final userId = auth.currentUser?.uid;
-    if (userId == null) return;
+  Future<void> removerVagaSalva(userId, [String? trampoId]) async {
+    final currentUserId = auth.currentUser?.uid;
+    if (currentUserId == null || trampoId == null) return;
 
-    final collectionRef = firestore
-        .collection('usuarios')
-        .doc(userId)
-        .collection('vagasSalvas');
-    final batch = firestore.batch();
+    final vagaSalvaCollection = firestore.collection('vagaSalva');
+    final docRef = vagaSalvaCollection.doc('${currentUserId}_$trampoId');
+    await docRef.delete();
 
-    // Limpa a coleção remota primeiro
-    final snapshot = await collectionRef.get();
-    for (final doc in snapshot.docs) {
-      batch.delete(doc.reference);
+    // Remove da coleção TramposSalvosUsers
+    final querySnapshot =
+        await firestore
+            .collection('TramposSalvosUsers')
+            .where('idTrampo', isEqualTo: trampoId)
+            .where('userId', isEqualTo: currentUserId)
+            .get();
+
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
     }
-    // Adiciona todos os itens da lista local `vagasSalvas`
-    for (final vaga in vagasSalvas) {
-      final docRef = collectionRef.doc(vaga['id']);
-      batch.set(docRef, vaga);
-    }
-
-    await batch.commit();
   }
 }

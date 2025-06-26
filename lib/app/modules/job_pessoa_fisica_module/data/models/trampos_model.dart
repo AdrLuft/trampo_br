@@ -12,7 +12,7 @@ class CreateTramposModel {
   final String userAddress;
   final String descricao;
   final String? userId;
-  final List<String> requisitos; // Alterado de String para List<String>
+  final List<String> requisitos;
   final String titulo;
   final String modalidade;
   final String salario;
@@ -32,7 +32,7 @@ class CreateTramposModel {
     required this.userAddress,
     required this.descricao,
     required this.userId,
-    this.requisitos = const [], // Alterado para lista com valor padrão
+    this.requisitos = const [],
     this.titulo = '',
     this.modalidade = 'Presencial',
     this.salario = '',
@@ -56,7 +56,10 @@ class CreateTramposModel {
       telefone: json['telefone'] as String? ?? '',
       userAddress: json['userAddress'] as String? ?? '',
       descricao: json['descricao'] as String? ?? '',
-      userId: json['userId'] as String?,
+      userId:
+          json['userId'] is DocumentReference
+              ? (json['userId'] as DocumentReference).id
+              : (json['userId'] as String?),
       requisitos: List<String>.from(json['requisitos'] ?? []),
       titulo: json['titulo'] as String? ?? '',
       modalidade: json['modalidade'] as String? ?? 'Presencial',
