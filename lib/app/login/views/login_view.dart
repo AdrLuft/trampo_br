@@ -5,6 +5,7 @@ import 'package:cpf_cnpj_validator/cpf_validator.dart';
 import 'package:cpf_cnpj_validator/cnpj_validator.dart';
 import 'package:interprise_calendar/app/core/enums/login_enum.dart';
 import 'package:interprise_calendar/app/login/presentations/login_controller.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -66,7 +67,7 @@ class _LoginViewState extends State<LoginView> {
           'Sucesso',
           'Cadastro realizado com sucesso!',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.8),
+          backgroundColor: Colors.green.withOpacity(0.8),
           colorText: Colors.white,
           duration: const Duration(seconds: 1),
         );
@@ -105,505 +106,626 @@ class _LoginViewState extends State<LoginView> {
           // Conteúdo principal
           SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(_isLoginMode ? 24.0 : 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: _isLoginMode ? 40 : 20),
-
-                  // Logo apenas no modo login
-                  if (_isLoginMode) ...[
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(60),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                            spreadRadius: 2,
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, -5),
-                            spreadRadius: -5,
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(60),
-                        child: Image.asset(
-                          'assets/images/trampos2.png',
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.teal.shade400,
-                                    Colors.teal.shade600,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.work_rounded,
-                                size: 60,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-
-                  Text(
-                    'Trampos BR',
-                    style: TextStyle(
-                      fontSize: _isLoginMode ? 36 : 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 2.0,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.8),
-                          blurRadius: 8,
-                          offset: const Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: _isLoginMode ? 16 : 4),
-                  Text(
-                    _isLoginMode ? 'Entre na sua conta' : 'Crie sua conta',
-                    style: TextStyle(
-                      fontSize: _isLoginMode ? 18 : 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          blurRadius: 6,
-                          offset: const Offset(1, 1),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: _isLoginMode ? 32 : 20),
-
-                  // Form com espaçamentos otimizados
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        // Seletor de tipo de usuário (apenas no modo cadastro)
-                        if (!_isLoginMode) ...[
-                          _buildFormField(
-                            child: DropdownButtonFormField<UserType>(
-                              value: _selectedUserType,
-                              decoration: _getInputDecoration(
-                                'Tipo de Usuário',
-                                Icons.person_outline,
-                              ),
-                              dropdownColor: Colors.teal.shade800,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              items:
-                                  UserType.values.map((UserType type) {
-                                    return DropdownMenuItem<UserType>(
-                                      value: type,
-                                      child: Text(
-                                        type.displayName,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (UserType? newValue) {
-                                if (newValue != null) {
-                                  setState(() {
-                                    _selectedUserType = newValue;
-                                    _documentController.clear();
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          SizedBox(height: _isLoginMode ? 25 : 16),
-
-                          // Nome/Razão Social
-                          _buildFormField(
-                            child: TextFormField(
-                              controller: _nameController,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: _getInputDecoration(
-                                _selectedUserType == UserType.pessoaFisica
-                                    ? 'Nome Completo'
-                                    : 'Razão Social',
-                                _selectedUserType == UserType.pessoaFisica
-                                    ? Icons.person
-                                    : Icons.business,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return _selectedUserType ==
-                                          UserType.pessoaFisica
-                                      ? 'Digite seu nome completo'
-                                      : 'Digite a razão social';
-                                }
-                                if (value.length < 6) {
-                                  return 'Nome deve ter pelo menos 6 caracteres';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          SizedBox(height: _isLoginMode ? 25 : 16),
-
-                          // CPF/CNPJ
-                          _buildFormField(
-                            child: TextFormField(
-                              controller: _documentController,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(
-                                  _selectedUserType == UserType.pessoaFisica
-                                      ? 11
-                                      : 14,
-                                ),
-                              ],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: _getInputDecoration(
-                                _selectedUserType.documentLabel,
-                                Icons.badge,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Digite seu ${_selectedUserType.documentLabel}';
-                                }
-
-                                if (_selectedUserType ==
-                                    UserType.pessoaFisica) {
-                                  if (!CPFValidator.isValid(value)) {
-                                    return 'CPF inválido';
-                                  }
-                                } else {
-                                  if (!CNPJValidator.isValid(value)) {
-                                    return 'CNPJ inválido';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          SizedBox(height: _isLoginMode ? 25 : 16),
-
-                          // Campo de Endereço (novo)
-                          _buildFormField(
-                            child: TextFormField(
-                              controller: _addressController,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: _getInputDecoration(
-                                'Endereço',
-                                Icons.location_on,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Digite seu endereço';
-                                }
-                                if (value.length < 10) {
-                                  return 'Endereço deve ter pelo menos 10 caracteres';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          SizedBox(height: _isLoginMode ? 25 : 16),
-                        ],
-
-                        // Email
-                        _buildFormField(
-                          child: TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: _getInputDecoration(
-                              'Email',
-                              Icons.email,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Digite seu email';
-                              }
-                              if (!GetUtils.isEmail(value)) {
-                                return 'Digite um email válido';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-
-                        SizedBox(height: _isLoginMode ? 25 : 16),
-
-                        // Senha
-                        _buildFormField(
-                          child: TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: _getInputDecoration(
-                              'Senha',
-                              Icons.lock,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Digite sua senha';
-                              }
-                              if (value.length < 6) {
-                                return 'A senha deve ter pelo menos 6 caracteres';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-
-                        if (!_isLoginMode) ...[
-                          SizedBox(height: _isLoginMode ? 25 : 16),
-                          _buildFormField(
-                            child: TextFormField(
-                              controller: _confirmPasswordController,
-                              obscureText: _obscureConfirmPassword,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: _getInputDecoration(
-                                'Confirmar Senha',
-                                Icons.lock_outline,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscureConfirmPassword
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscureConfirmPassword =
-                                          !_obscureConfirmPassword;
-                                    });
-                                  },
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Confirme sua senha';
-                                }
-                                if (value != _passwordController.text) {
-                                  return 'As senhas não coincidem';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-
-                        SizedBox(height: _isLoginMode ? 40 : 24),
-
-                        // Botão
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.teal.withValues(alpha: 0.5),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                                spreadRadius: 3,
-                              ),
-                              BoxShadow(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, -8),
-                                spreadRadius: -8,
-                              ),
-                            ],
-                          ),
-                          child: Obx(
-                            () => ElevatedButton(
-                              onPressed:
-                                  controller.isLoading.value ? null : _submit,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    controller.isLoading.value
-                                        ? Colors.teal.shade300
-                                        : Colors.teal,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 56),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                elevation: 0,
-                              ),
-                              child:
-                                  controller.isLoading.value
-                                      ? Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Center(
-                                            child: Text(
-                                              _isLoginMode
-                                                  ? 'Entrando...'
-                                                  : 'Cadastrando...',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                      : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _isLoginMode
-                                                ? Icons.login
-                                                : Icons.person_add,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            _isLoginMode
-                                                ? 'Entrar'
-                                                : 'Cadastrar',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: _isLoginMode ? 30 : 20),
-
-                        TextButton(
-                          onPressed: _toggleMode,
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                          ),
-                          child: RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 16,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    blurRadius: 4,
-                                    offset: const Offset(1, 1),
-                                  ),
-                                ],
-                              ),
-                              children: [
-                                TextSpan(
-                                  text:
-                                      _isLoginMode
-                                          ? 'Não tem uma conta? '
-                                          : 'Já tem uma conta? ',
-                                ),
-                                TextSpan(
-                                  text: _isLoginMode ? 'Cadastre-se' : 'Entre',
-                                  style: TextStyle(
-                                    color: Colors.yellow,
-                                    fontWeight: FontWeight.bold,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.7,
-                                        ),
-                                        blurRadius: 4,
-                                        offset: const Offset(1, 1),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child:
+                      _isLoginMode
+                          ? _buildLoginContent(context)
+                          : _buildRegisterContent(context),
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoginContent(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: 40),
+        // Logo
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(60),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+                spreadRadius: -5,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(60),
+            child: Image.asset(
+              'assets/images/trampos2.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.teal.shade400, Colors.teal.shade600],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.work_rounded,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Trampos BR',
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 2.0,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.8),
+                blurRadius: 8,
+                offset: const Offset(2, 2),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Entre na sua conta',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 6,
+                offset: const Offset(1, 1),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        // Login Form
+        _buildLoginForm(),
+        const SizedBox(height: 30),
+        TextButton(
+          onPressed: _toggleMode,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          ),
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 16,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 4,
+                    offset: const Offset(1, 1),
+                  ),
+                ],
+              ),
+              children: [
+                const TextSpan(text: 'Não tem uma conta? '),
+                TextSpan(
+                  text: 'Cadastre-se',
+                  style: TextStyle(
+                    color: Colors.yellow,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        blurRadius: 4,
+                        offset: const Offset(1, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterContent(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: 20),
+        Text(
+          'Trampos BR',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 2.0,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.8),
+                blurRadius: 8,
+                offset: const Offset(2, 2),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Crie sua conta',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 6,
+                offset: const Offset(1, 1),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Registration Form
+        _buildRegisterForm(),
+        const SizedBox(height: 20),
+        TextButton(
+          onPressed: _toggleMode,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          ),
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 16,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 4,
+                    offset: const Offset(1, 1),
+                  ),
+                ],
+              ),
+              children: [
+                const TextSpan(text: 'Já tem uma conta? '),
+                TextSpan(
+                  text: 'Entre',
+                  style: TextStyle(
+                    color: Colors.yellow,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        blurRadius: 4,
+                        offset: const Offset(1, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          _buildFormField(
+            child: TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration('Email', Icons.email),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Digite seu email';
+                }
+                if (!GetUtils.isEmail(value)) {
+                  return 'Digite um email válido';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration(
+                'Senha',
+                Icons.lock,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Digite sua senha';
+                }
+                if (value.length < 6) {
+                  return 'A senha deve ter pelo menos 6 caracteres';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: DialogsHomeViewPessoaFisica.showResetPasswordDialog,
+              child: Text(
+                'Esqueci minha senha',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 4,
+                      offset: const Offset(1, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildSubmitButton(isLoginMode: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegisterForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          _buildFormField(
+            child: DropdownButtonFormField<UserType>(
+              value: _selectedUserType,
+              decoration: _getInputDecoration(
+                'Tipo de Usuário',
+                Icons.person_outline,
+              ),
+              dropdownColor: Colors.teal.shade800,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              items:
+                  UserType.values.map((UserType type) {
+                    return DropdownMenuItem<UserType>(
+                      value: type,
+                      child: Text(
+                        type.displayName,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+              onChanged: (UserType? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedUserType = newValue;
+                    _documentController.clear();
+                  });
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _nameController,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration(
+                _selectedUserType == UserType.pessoaFisica
+                    ? 'Nome Completo'
+                    : 'Razão Social',
+                _selectedUserType == UserType.pessoaFisica
+                    ? Icons.person
+                    : Icons.business,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return _selectedUserType == UserType.pessoaFisica
+                      ? 'Digite seu nome completo'
+                      : 'Digite a razão social';
+                }
+                if (value.length < 6) {
+                  return 'Nome deve ter pelo menos 6 caracteres';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _documentController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  _selectedUserType == UserType.pessoaFisica ? 11 : 14,
+                ),
+              ],
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration(
+                _selectedUserType.documentLabel,
+                Icons.badge,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Digite seu ${_selectedUserType.documentLabel}';
+                }
+
+                if (_selectedUserType == UserType.pessoaFisica) {
+                  if (!CPFValidator.isValid(value)) {
+                    return 'CPF inválido';
+                  }
+                } else {
+                  if (!CNPJValidator.isValid(value)) {
+                    return 'CNPJ inválido';
+                  }
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _addressController,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration('Endereço', Icons.location_on),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Digite seu endereço';
+                }
+                if (value.length < 10) {
+                  return 'Endereço deve ter pelo menos 10 caracteres';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration('Email', Icons.email),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Digite seu email';
+                }
+                if (!GetUtils.isEmail(value)) {
+                  return 'Digite um email válido';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration(
+                'Senha',
+                Icons.lock,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Digite sua senha';
+                }
+                if (value.length < 6) {
+                  return 'A senha deve ter pelo menos 6 caracteres';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            child: TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirmPassword,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: _getInputDecoration(
+                'Confirmar Senha',
+                Icons.lock_outline,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureConfirmPassword
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    });
+                  },
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Confirme sua senha';
+                }
+                if (value != _passwordController.text) {
+                  return 'As senhas não coincidem';
+                }
+                return null;
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildSubmitButton(isLoginMode: false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton({required bool isLoginMode}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.teal.withValues(alpha: 0.5),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+            spreadRadius: 3,
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -8),
+            spreadRadius: -8,
+          ),
+        ],
+      ),
+      child: Obx(
+        () => ElevatedButton(
+          onPressed: controller.isLoading.value ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                controller.isLoading.value ? Colors.teal.shade300 : Colors.teal,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 56),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            elevation: 0,
+          ),
+          child:
+              controller.isLoading.value
+                  ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Center(
+                        child: Text(
+                          isLoginMode ? 'Entrando...' : 'Cadastrando...',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                  : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(isLoginMode ? Icons.login : Icons.person_add),
+                      const SizedBox(width: 8),
+                      Text(
+                        isLoginMode ? 'Entrar' : 'Cadastrar',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+        ),
       ),
     );
   }
@@ -647,9 +769,9 @@ class _LoginViewState extends State<LoginView> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         color: Colors.white,
-        fontSize: _isLoginMode ? 18 : 16,
+        fontSize: 18, // Fixed font size for login fields
         fontWeight: FontWeight.w500,
       ),
       prefixIcon: Icon(icon, color: Colors.white, size: 24),
@@ -676,9 +798,9 @@ class _LoginViewState extends State<LoginView> {
       ),
       filled: true,
       fillColor: Colors.transparent,
-      contentPadding: EdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: 20,
-        vertical: _isLoginMode ? 16 : 14,
+        vertical: 16, // Fixed vertical padding for login fields
       ),
       errorMaxLines: 1,
       errorStyle: const TextStyle(

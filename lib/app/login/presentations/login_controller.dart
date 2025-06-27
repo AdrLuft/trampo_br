@@ -10,6 +10,7 @@ class LoginController extends GetxController {
   LoginController(this.loginRepository);
 
   final isLoading = false.obs;
+  final _loginRepository = Get.find<LoginRepository>();
 
   Future<void> login(String email, String password) async {
     isLoading.value = true;
@@ -93,10 +94,27 @@ class LoginController extends GetxController {
   Future<void> resetPassword(String email) async {
     isLoading.value = true;
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      await _loginRepository.resetPasswordEmail(email);
     } on FirebaseException catch (e) {
       isLoading.value = false;
       throw ('Erro ao enviar email de redefinição de senha: $e');
+    }
+  }
+
+  //Metodo de alteração de senha
+  Future<void> changePassword(String newPassword, String confirPassword) async {
+    isLoading.value = true;
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.updatePassword(newPassword);
+      } else {
+        throw ('Usuário não autenticado');
+      }
+    } on FirebaseException catch (e) {
+      throw ('Erro ao alterar senha: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 }

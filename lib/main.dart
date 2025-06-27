@@ -4,12 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/core/configs/global_themes/app_theme.dart';
 import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
+import 'package:interprise_calendar/app/core/performance/performance_config.dart';
 import 'package:interprise_calendar/app/login/bindings/login_bindings.dart';
 import 'package:interprise_calendar/app/routs/app_routes.dart';
 import 'package:interprise_calendar/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configurações de performance
+  PerformanceConfig.configurePerformance();
+  PerformanceConfig.configureKeyboardAnimations();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Configurar locale para Firebase

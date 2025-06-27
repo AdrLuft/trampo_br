@@ -38,4 +38,8 @@ class LoginRepository {
   Future<void> logout() async {
     await _firebaseAuth.signOut();
   }
+
+  Future<void> resetPasswordEmail(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email);
+  }
 }
