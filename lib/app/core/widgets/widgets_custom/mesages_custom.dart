@@ -14,7 +14,7 @@ class MessageUtils {
       backgroundColor: isError ? Colors.redAccent : Colors.black87,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 1),
       margin: const EdgeInsets.all(12),
     );
   }
@@ -55,7 +55,7 @@ class MessageUtils {
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(12),
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 1),
     );
   }
 

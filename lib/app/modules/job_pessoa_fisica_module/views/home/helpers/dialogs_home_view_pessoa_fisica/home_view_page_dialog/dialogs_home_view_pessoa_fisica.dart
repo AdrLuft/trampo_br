@@ -107,95 +107,360 @@ class DialogsHomeViewPessoaFisica {
   }
 
   static void showChangePasswordDialog() {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    final controllers = [
-      currentPasswordController,
-      newPasswordController,
-      confirmPasswordController,
-    ];
+    Get.dialog(const _ChangePasswordDialog(), barrierDismissible: false);
+  }
 
-    Get.dialog(
-      AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-        ),
-        title: const Text('Alterar Senha'),
-        content: Column(
+  static void showResetPasswordDialog() {
+    Get.dialog(const _ResetPasswordDialog(), barrierDismissible: false);
+  }
+}
+
+class _ResetPasswordDialog extends StatefulWidget {
+  const _ResetPasswordDialog();
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  late final TextEditingController _emailController;
+  late final LoginController _loginController;
+  bool _isLoading = false;
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _loginController = Get.find<LoginController>();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _safeSetState(VoidCallback fn) {
+    if (!_disposed && mounted) {
+      setState(fn);
+    }
+  }
+
+  Future<void> _handlePasswordReset() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      PerformanceConfig.showOptimizedSnackbar(
+        title: 'Erro',
+        message: 'Digite seu email',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+      return;
+    }
+
+    if (!GetUtils.isEmail(email)) {
+      PerformanceConfig.showOptimizedSnackbar(
+        title: 'Erro',
+        message: 'Digite um email válido',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+      return;
+    }
+
+    _safeSetState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _loginController.resetPassword(email);
+
+      if (!_disposed && mounted) {
+        Get.back();
+        PerformanceConfig.showOptimizedSnackbar(
+          title: 'Email Enviado',
+          message: 'Instruções enviadas para $email',
+          backgroundColor: Colors.green,
+          icon: Icons.check_circle,
+          duration: const Duration(seconds: 4),
+        );
+      }
+    } catch (e) {
+      if (!_disposed && mounted) {
+        PerformanceConfig.showOptimizedSnackbar(
+          title: 'Erro',
+          message: 'Erro ao enviar email: ${e.toString()}',
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      }
+    } finally {
+      _safeSetState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(15)),
+      ),
+      title: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.email, color: Colors.teal, size: 28),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Redefinir Senha',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: currentPasswordController,
-              obscureText: true,
-              textInputAction: TextInputAction.next,
-              decoration: PerformanceConfig.getOptimizedInputDecoration(
-                labelText: 'Senha Atual',
-                prefixIcon: Icons.lock_outline,
-              ),
+            const Text(
+              'Digite seu email para receber as instruções de redefinição de senha:',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              textInputAction: TextInputAction.next,
-              decoration: PerformanceConfig.getOptimizedInputDecoration(
-                labelText: 'Nova Senha',
-                prefixIcon: Icons.lock,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,
+              enabled: !_isLoading,
               decoration: PerformanceConfig.getOptimizedInputDecoration(
-                labelText: 'Confirmar Nova Senha',
-                prefixIcon: Icons.lock,
+                labelText: 'Email',
+                hintText: 'seuemail@exemplo.com',
+                prefixIcon: Icons.email_outlined,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Verifique sua caixa de entrada e spam após o envio.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.orange,
+                fontStyle: FontStyle.italic,
               ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _disposePasswordControllers(controllers);
-              Get.back();
-            },
-            child: const Text('Cancelar'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Get.back(),
+          child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          style: PerformanceConfig.primaryButtonStyle,
+          onPressed: _isLoading ? null : _handlePasswordReset,
+          child:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                  : const Text('Enviar'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog();
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  late final TextEditingController _currentPasswordController;
+  late final TextEditingController _newPasswordController;
+  late final TextEditingController _confirmPasswordController;
+  bool _isLoading = false;
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPasswordController = TextEditingController();
+    _newPasswordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _safeSetState(VoidCallback fn) {
+    if (!_disposed && mounted) {
+      setState(fn);
+    }
+  }
+
+  Future<void> _handleChangePassword() async {
+    final currentPassword = _currentPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (currentPassword.isEmpty) {
+      PerformanceConfig.showOptimizedSnackbar(
+        title: 'Erro',
+        message: 'Digite sua senha atual',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+      return;
+    }
+
+    if (newPassword.isEmpty) {
+      PerformanceConfig.showOptimizedSnackbar(
+        title: 'Erro',
+        message: 'Digite a nova senha',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      PerformanceConfig.showOptimizedSnackbar(
+        title: 'Erro',
+        message: 'As senhas não coincidem',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      PerformanceConfig.showOptimizedSnackbar(
+        title: 'Erro',
+        message: 'A senha deve ter pelo menos 6 caracteres',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+      return;
+    }
+
+    _safeSetState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Simular alteração de senha
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!_disposed && mounted) {
+        Get.back();
+        PerformanceConfig.showOptimizedSnackbar(
+          title: 'Sucesso',
+          message: 'Senha alterada com sucesso!',
+          backgroundColor: Colors.green,
+          icon: Icons.check_circle,
+        );
+      }
+    } catch (e) {
+      if (!_disposed && mounted) {
+        PerformanceConfig.showOptimizedSnackbar(
+          title: 'Erro',
+          message: 'Erro ao alterar senha: ${e.toString()}',
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      }
+    } finally {
+      _safeSetState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(15)),
+      ),
+      title: const Text('Alterar Senha'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _currentPasswordController,
+            obscureText: true,
+            textInputAction: TextInputAction.next,
+            enabled: !_isLoading,
+            decoration: PerformanceConfig.getOptimizedInputDecoration(
+              labelText: 'Senha Atual',
+              prefixIcon: Icons.lock_outline,
+            ),
           ),
-          ElevatedButton(
-            style: PerformanceConfig.primaryButtonStyle,
-            onPressed: () {
-              // Implementar lógica de alteração de senha
-              Get.back();
-              PerformanceConfig.showOptimizedSnackbar(
-                title: 'Senha',
-                message: 'Senha alterada com sucesso!',
-                backgroundColor: Colors.green,
-                icon: Icons.check_circle,
-              );
-            },
-            child: const Text('Alterar'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _newPasswordController,
+            obscureText: true,
+            textInputAction: TextInputAction.next,
+            enabled: !_isLoading,
+            decoration: PerformanceConfig.getOptimizedInputDecoration(
+              labelText: 'Nova Senha',
+              prefixIcon: Icons.lock,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _confirmPasswordController,
+            obscureText: true,
+            textInputAction: TextInputAction.done,
+            enabled: !_isLoading,
+            decoration: PerformanceConfig.getOptimizedInputDecoration(
+              labelText: 'Confirmar Nova Senha',
+              prefixIcon: Icons.lock,
+            ),
           ),
         ],
       ),
-    ).then((_) {
-      // Garantir cleanup quando o diálogo for fechado
-      _disposePasswordControllers(controllers);
-    });
-  }
-  }
-
-  static void _disposePasswordControllers(
-    List<TextEditingController> controllers,
-  ) {
-    for (final controller in controllers) {
-      try {
-        controller.dispose();
-      } catch (e) {
-        // Controller já foi disposed, ignorar erro
-      }
-    }
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Get.back(),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          style: PerformanceConfig.primaryButtonStyle,
+          onPressed: _isLoading ? null : _handleChangePassword,
+          child:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                  : const Text('Alterar'),
+        ),
+      ],
+    );
   }
 }

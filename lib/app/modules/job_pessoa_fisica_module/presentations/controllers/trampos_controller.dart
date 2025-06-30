@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/mesages_custom.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/aplications/usecases/agendamento_usecases/trampos_listner_usecases.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/entities/trampos_entiti.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/domain/repositories/trampos_repository_abstract.dart';
 
@@ -135,13 +134,11 @@ class TramposController extends GetxController {
         return;
       }
 
-      final model = CreateTramposModel.fromEntity(trampo);
-      final vagaData = model.toJson();
-
-      vagaData['dataSalvamento'] = Timestamp.now();
-      vagaData['id'] = trampo.id;
-      vagasSalvas.add(vagaData);
+      // Salva no Firebase
       await _repository.salvarVagaFavoritos(userId!, trampo.id);
+
+      // Recarrega a lista de vagas salvas do Firebase
+      await carregarVagasSalvas();
 
       MessageUtils.showSucessSnackbar('Sucesso', 'Vaga Salva!');
     } catch (e) {
@@ -152,9 +149,11 @@ class TramposController extends GetxController {
   Future<void> removerVagaSalva(TramposEntiti trampo) async {
     final userId = auth.currentUser?.uid;
     try {
-      vagasSalvas.removeWhere((vaga) => vaga['id'] == trampo.id);
-      vagasSalvas.refresh();
+      // Remove do Firebase
       await _repository.removerVagaSalva(userId!, trampo.id);
+
+      // Recarrega a lista de vagas salvas do Firebase
+      await carregarVagasSalvas();
 
       MessageUtils.showSucessSnackbar('Sucesso', 'Vaga removida com sucesso!');
     } catch (e) {
@@ -167,15 +166,30 @@ class TramposController extends GetxController {
       final userId = auth.currentUser?.uid;
       if (userId == null) return;
 
-      final doc =
+      // Busca os IDs das vagas salvas na coleção TramposSalvosUsers
+      final vagasSalvasQuery =
           await firestore
-              .collection('usuarios')
-              .doc(userId)
-              .collection('vagasSalvas')
+              .collection('TramposSalvosUsers')
+              .where('userId', isEqualTo: userId)
               .get();
 
-      vagasSalvas.value =
-          doc.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+      List<Map<String, dynamic>> vagasCarregadas = [];
+
+      // Para cada vaga salva, busca os dados completos na coleção Trampos
+      for (var doc in vagasSalvasQuery.docs) {
+        final idTrampo = doc.data()['idTrampo'] as String;
+
+        final trampoDoc =
+            await firestore.collection('Trampos').doc(idTrampo).get();
+
+        if (trampoDoc.exists) {
+          final trampoData = trampoDoc.data() as Map<String, dynamic>;
+          trampoData['id'] = trampoDoc.id;
+          vagasCarregadas.add(trampoData);
+        }
+      }
+
+      vagasSalvas.value = vagasCarregadas;
     } catch (e) {
       MessageUtils.handleError(e, 'Erro ao carregar vagas salvas: $e');
     }

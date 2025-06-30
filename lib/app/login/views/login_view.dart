@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cpf_cnpj_validator/cpf_validator.dart';
 import 'package:cpf_cnpj_validator/cnpj_validator.dart';
 import 'package:interprise_calendar/app/core/enums/login_enum.dart';
@@ -14,46 +15,95 @@ class LoginView extends StatefulWidget {
   State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _documentController = TextEditingController();
   final _nameController = TextEditingController();
-  final _addressController = TextEditingController(); // Novo campo
-  bool _isLoginMode = true;
+  final _addressController = TextEditingController();
+
+  bool _isLogin = true;
+  bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _acceptTerms = false;
   UserType _selectedUserType = UserType.pessoaFisica;
+
+  late AnimationController _animationController;
 
   LoginController get controller => Get.find();
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _animationController.forward();
+    _loadUserData();
+  }
+
+  @override
   void dispose() {
+    _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _documentController.dispose();
     _nameController.dispose();
-    _addressController.dispose(); // Dispose do novo campo
+    _addressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('saved_email');
+    if (savedEmail != null) {
+      setState(() {
+        _emailController.text = savedEmail;
+      });
+    }
+  }
+
+  Future<void> _saveUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('saved_email', _emailController.text);
   }
 
   void _toggleMode() {
     setState(() {
-      _isLoginMode = !_isLoginMode;
+      _isLogin = !_isLogin;
     });
+    _animationController.reset();
+    _animationController.forward();
   }
 
-  void _submit() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    controller.isLoading.value = true;
+
+    if (!_isLogin && !_acceptTerms) {
+      Get.snackbar(
+        'Erro',
+        'Você deve aceitar os termos de uso',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withAlpha(28),
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
-      if (_isLoginMode) {
+      if (_isLogin) {
         await controller.login(_emailController.text, _passwordController.text);
-        controller.isLoading.value = false;
+        await _saveUserData();
       } else {
         await controller.register(
           email: _emailController.text,
@@ -61,759 +111,506 @@ class _LoginViewState extends State<LoginView> {
           userType: _selectedUserType,
           document: _documentController.text,
           name: _nameController.text,
-          address: _addressController.text, // Incluir endereço
+          address: _addressController.text,
         );
         Get.snackbar(
           'Sucesso',
           'Cadastro realizado com sucesso!',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.8),
+          backgroundColor: Colors.green.withAlpha(28),
           colorText: Colors.white,
-          duration: const Duration(seconds: 1),
+          duration: const Duration(seconds: 2),
         );
         setState(() {
-          _isLoginMode = true;
+          _isLogin = true;
         });
       }
     } catch (e) {
-      Get.snackbar('Erro', e.toString());
-      controller.isLoading.value = false;
+      Get.snackbar(
+        'Erro',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withAlpha(28),
+        colorText: Colors.white,
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Imagem de fundo sempre presente
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/trampos3.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isTablet = constraints.maxWidth > 600;
 
-          // Overlay sutil
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.1),
-            ),
-          ),
-
-          // Conteúdo principal
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child:
-                      _isLoginMode
-                          ? _buildLoginContent(context)
-                          : _buildRegisterContent(context),
-                ),
-              ),
-            ),
-          ),
-        ],
+            if (isTablet) {
+              return _buildTabletLayout();
+            } else {
+              return _buildMobileLayout();
+            }
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildLoginContent(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+  Widget _buildTabletLayout() {
+    return Row(
       children: [
-        const SizedBox(height: 40),
-        // Logo
+        // Lado esquerdo - Logo com gradiente
+        Expanded(
+          flex: 3,
+          child: Container(
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF8F9FA),
+                  Color(0xFFE9ECEF),
+                  Color(0xFFDEE2E6),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.contain,
+                  height: 120,
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Lado direito - Formulário
+        Expanded(
+          flex: 2,
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: SingleChildScrollView(child: _buildFormContent()),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        // Área superior com logo - mais compacta
         Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(60),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-                spreadRadius: 2,
-              ),
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
-                spreadRadius: -5,
-              ),
-            ],
+          height: MediaQuery.of(context).size.height * 0.25,
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF), Color(0xFFDEE2E6)],
+              stops: [0.0, 0.6, 1.0],
+            ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(60),
-            child: Image.asset(
-              'assets/images/trampos2.png',
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.teal.shade400, Colors.teal.shade600],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+                height: 80,
+              ),
+            ),
+          ),
+        ),
+        // Área do formulário - expansível
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _buildFormContent(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormContent() {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Logo/Título - mais compacto
+            const Text(
+              'Trampos',
+              style: TextStyle(
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333),
+                letterSpacing: 1.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+
+            // Formulário
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Campos do cadastro (se não for login)
+                  if (!_isLogin) ...[
+                    _buildUserTypeDropdown(),
+                    const SizedBox(height: 12),
+                    _buildSimpleTextField(
+                      controller: _nameController,
+                      hintText:
+                          _selectedUserType == UserType.pessoaFisica
+                              ? 'Nome Completo'
+                              : 'Razão Social',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return _selectedUserType == UserType.pessoaFisica
+                              ? 'Digite seu nome completo'
+                              : 'Digite a razão social';
+                        }
+                        if (value.length < 6) {
+                          return 'Nome deve ter pelo menos 6 caracteres';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.work_rounded,
-                    size: 60,
-                    color: Colors.white,
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Trampos BR',
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 2.0,
-            shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.8),
-                blurRadius: 8,
-                offset: const Offset(2, 2),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Entre na sua conta',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.6),
-                blurRadius: 6,
-                offset: const Offset(1, 1),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 32),
-        // Login Form
-        _buildLoginForm(),
-        const SizedBox(height: 30),
-        TextButton(
-          onPressed: _toggleMode,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          ),
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 16,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 4,
-                    offset: const Offset(1, 1),
-                  ),
-                ],
-              ),
-              children: [
-                const TextSpan(text: 'Não tem uma conta? '),
-                TextSpan(
-                  text: 'Cadastre-se',
-                  style: TextStyle(
-                    color: Colors.yellow,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.7),
-                        blurRadius: 4,
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+                    const SizedBox(height: 12),
+                    _buildSimpleTextField(
+                      controller: _documentController,
+                      hintText: _selectedUserType.documentLabel,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(
+                          _selectedUserType == UserType.pessoaFisica ? 11 : 14,
+                        ),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Digite seu ${_selectedUserType.documentLabel}';
+                        }
+                        if (_selectedUserType == UserType.pessoaFisica) {
+                          if (!CPFValidator.isValid(value)) {
+                            return 'CPF inválido';
+                          }
+                        } else {
+                          if (!CNPJValidator.isValid(value)) {
+                            return 'CNPJ inválido';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSimpleTextField(
+                      controller: _addressController,
+                      hintText: 'Endereço',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Digite seu endereço';
+                        }
+                        if (value.length < 10) {
+                          return 'Endereço deve ter pelo menos 10 caracteres';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
-  Widget _buildRegisterContent(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 20),
-        Text(
-          'Trampos BR',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 2.0,
-            shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.8),
-                blurRadius: 8,
-                offset: const Offset(2, 2),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Crie sua conta',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.6),
-                blurRadius: 6,
-                offset: const Offset(1, 1),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        // Registration Form
-        _buildRegisterForm(),
-        const SizedBox(height: 20),
-        TextButton(
-          onPressed: _toggleMode,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          ),
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 16,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 4,
-                    offset: const Offset(1, 1),
+                  // Email
+                  _buildSimpleTextField(
+                    controller: _emailController,
+                    hintText: 'Email',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Digite seu e-mail';
+                      }
+                      if (!GetUtils.isEmail(value)) {
+                        return 'Digite um e-mail válido';
+                      }
+                      return null;
+                    },
                   ),
-                ],
-              ),
-              children: [
-                const TextSpan(text: 'Já tem uma conta? '),
-                TextSpan(
-                  text: 'Entre',
-                  style: TextStyle(
-                    color: Colors.yellow,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.7),
-                        blurRadius: 4,
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+                  const SizedBox(height: 12),
 
-  Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildFormField(
-            child: TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration('Email', Icons.email),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite seu email';
-                }
-                if (!GetUtils.isEmail(value)) {
-                  return 'Digite um email válido';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration(
-                'Senha',
-                Icons.lock,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.white,
+                  // Senha
+                  _buildSimpleTextField(
+                    controller: _passwordController,
+                    hintText: 'Senha',
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey[600],
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Digite sua senha';
+                      }
+                      if (value.length < 6) {
+                        return 'A senha deve ter pelo menos 6 caracteres';
+                      }
+                      return null;
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite sua senha';
-                }
-                if (value.length < 6) {
-                  return 'A senha deve ter pelo menos 6 caracteres';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: DialogsHomeViewPessoaFisica.showResetPasswordDialog,
-              child: Text(
-                'Esqueci minha senha',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 4,
-                      offset: const Offset(1, 1),
+
+                  // Confirmar senha (apenas no cadastro)
+                  if (!_isLogin) ...[
+                    const SizedBox(height: 12),
+                    _buildSimpleTextField(
+                      controller: _confirmPasswordController,
+                      hintText: 'Confirmar Senha',
+                      obscureText: _obscureConfirmPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey[600],
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Confirme sua senha';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'As senhas não coincidem';
+                        }
+                        return null;
+                      },
                     ),
                   ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildSubmitButton(isLoginMode: true),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildRegisterForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildFormField(
-            child: DropdownButtonFormField<UserType>(
-              value: _selectedUserType,
-              decoration: _getInputDecoration(
-                'Tipo de Usuário',
-                Icons.person_outline,
-              ),
-              dropdownColor: Colors.teal.shade800,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              items:
-                  UserType.values.map((UserType type) {
-                    return DropdownMenuItem<UserType>(
-                      value: type,
+                  const SizedBox(height: 16),
+
+                  // Termos de uso (apenas no cadastro)
+                  if (!_isLogin)
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _acceptTerms,
+                          onChanged: (value) {
+                            setState(() {
+                              _acceptTerms = value ?? false;
+                            });
+                          },
+                          activeColor: const Color(0xFF6366F1),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Aceito os termos de uso e política de privacidade',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  if (!_isLogin) const SizedBox(height: 16),
+
+                  // Botão principal
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child:
+                          _isLoading
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                              : Text(
+                                _isLogin ? 'Login' : 'Cadastrar',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Link para alternar entre login/cadastro
+                  Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextButton(
+                      onPressed: _toggleMode,
                       child: Text(
-                        type.displayName,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (UserType? newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    _selectedUserType = newValue;
-                    _documentController.clear();
-                  });
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _nameController,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration(
-                _selectedUserType == UserType.pessoaFisica
-                    ? 'Nome Completo'
-                    : 'Razão Social',
-                _selectedUserType == UserType.pessoaFisica
-                    ? Icons.person
-                    : Icons.business,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return _selectedUserType == UserType.pessoaFisica
-                      ? 'Digite seu nome completo'
-                      : 'Digite a razão social';
-                }
-                if (value.length < 6) {
-                  return 'Nome deve ter pelo menos 6 caracteres';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _documentController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(
-                  _selectedUserType == UserType.pessoaFisica ? 11 : 14,
-                ),
-              ],
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration(
-                _selectedUserType.documentLabel,
-                Icons.badge,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite seu ${_selectedUserType.documentLabel}';
-                }
-
-                if (_selectedUserType == UserType.pessoaFisica) {
-                  if (!CPFValidator.isValid(value)) {
-                    return 'CPF inválido';
-                  }
-                } else {
-                  if (!CNPJValidator.isValid(value)) {
-                    return 'CNPJ inválido';
-                  }
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _addressController,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration('Endereço', Icons.location_on),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite seu endereço';
-                }
-                if (value.length < 10) {
-                  return 'Endereço deve ter pelo menos 10 caracteres';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration('Email', Icons.email),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite seu email';
-                }
-                if (!GetUtils.isEmail(value)) {
-                  return 'Digite um email válido';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration(
-                'Senha',
-                Icons.lock,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite sua senha';
-                }
-                if (value.length < 6) {
-                  return 'A senha deve ter pelo menos 6 caracteres';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            child: TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirmPassword,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: _getInputDecoration(
-                'Confirmar Senha',
-                Icons.lock_outline,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirmPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                    });
-                  },
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Confirme sua senha';
-                }
-                if (value != _passwordController.text) {
-                  return 'As senhas não coincidem';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildSubmitButton(isLoginMode: false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubmitButton({required bool isLoginMode}) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.teal.withValues(alpha: 0.5),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-            spreadRadius: 3,
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, -8),
-            spreadRadius: -8,
-          ),
-        ],
-      ),
-      child: Obx(
-        () => ElevatedButton(
-          onPressed: controller.isLoading.value ? null : _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                controller.isLoading.value ? Colors.teal.shade300 : Colors.teal,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            elevation: 0,
-          ),
-          child:
-              controller.isLoading.value
-                  ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Center(
-                        child: Text(
-                          isLoginMode ? 'Entrando...' : 'Cadastrando...',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                  : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(isLoginMode ? Icons.login : Icons.person_add),
-                      const SizedBox(width: 8),
-                      Text(
-                        isLoginMode ? 'Entrar' : 'Cadastrar',
+                        _isLogin ? 'Cadastre-se' : 'Já tem conta? Faça login',
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ],
+                    ),
                   ),
+
+                  // Link "Esqueci a senha" (apenas no login)
+                  if (_isLogin) ...[
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed:
+                          () =>
+                              DialogsHomeViewPessoaFisica.showResetPasswordDialog(),
+                      child: const Text(
+                        'Esqueci a senha',
+                        style: TextStyle(
+                          color: Color(0xFF6366F1),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Método helper para criar campos de formulário com estilo consistente
-  Widget _buildFormField({required Widget child}) {
+  Widget _buildUserTypeDropdown() {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Colors.black.withValues(
-          alpha: 0.3,
-        ), // Fundo escuro semi-transparente
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.8),
-          width: 2.0, // Borda mais espessa
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.2),
-            blurRadius: 15,
-            offset: const Offset(0, -3),
-            spreadRadius: -3,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade600, width: 2),
+        color: Colors.white,
       ),
-      child: child,
+      child: DropdownButtonFormField<UserType>(
+        value: _selectedUserType,
+        decoration: const InputDecoration(
+          labelText: 'Tipo de Usuário',
+          labelStyle: TextStyle(
+            color: Color(0xFF212529),
+            fontWeight: FontWeight.w500,
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        dropdownColor: Colors.white,
+        items:
+            UserType.values.map((UserType type) {
+              return DropdownMenuItem<UserType>(
+                value: type,
+                child: Text(
+                  type.displayName,
+                  style: const TextStyle(
+                    color: Color(0xFF212529),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+        onChanged: (UserType? newValue) {
+          if (newValue != null) {
+            setState(() {
+              _selectedUserType = newValue;
+              _documentController.clear();
+            });
+          }
+        },
+      ),
     );
   }
 
-  // Método helper para decoração de inputs
-  InputDecoration _getInputDecoration(
-    String label,
-    IconData icon, {
+  Widget _buildSimpleTextField({
+    required TextEditingController controller,
+    required String hintText,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    bool obscureText = false,
     Widget? suffixIcon,
+    String? Function(String?)? validator,
   }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade600, width: 2),
         color: Colors.white,
-        fontSize: 18, // Fixed font size for login fields
-        fontWeight: FontWeight.w500,
       ),
-      prefixIcon: Icon(icon, color: Colors.white, size: 24),
-      suffixIcon: suffixIcon,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(color: Colors.teal.shade300, width: 2.0),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.red, width: 2.0),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.red, width: 2.0),
-      ),
-      filled: true,
-      fillColor: Colors.transparent,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 16, // Fixed vertical padding for login fields
-      ),
-      errorMaxLines: 1,
-      errorStyle: const TextStyle(
-        color: Colors.redAccent,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        shadows: [
-          Shadow(color: Colors.black, blurRadius: 2, offset: Offset(1, 1)),
-        ],
-      ),
-      floatingLabelStyle: TextStyle(
-        color: Colors.teal.shade200,
-        fontWeight: FontWeight.w600,
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        obscureText: obscureText,
+        validator: validator,
+        style: const TextStyle(
+          fontSize: 16,
+          color: Color(0xFF212529),
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(
+            color: Color(0xFF6C757D),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+          ),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+        ),
       ),
     );
   }
