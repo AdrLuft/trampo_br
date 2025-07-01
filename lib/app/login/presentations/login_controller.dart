@@ -69,6 +69,7 @@ class LoginController extends GetxController {
     required String name,
     required String document,
     required String address,
+    required String aceitarTermos,
   }) async {
     isLoading.value = true;
     try {
@@ -79,6 +80,7 @@ class LoginController extends GetxController {
         name: name,
         document: document,
         address: address,
+        aceitarTermos: aceitarTermos,
       );
     } on FirebaseException catch (e) {
       throw ('Erro ao registrar: $e');

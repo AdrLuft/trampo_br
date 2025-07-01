@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:interprise_calendar/app/login/presentations/login_controller.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cpf_cnpj_validator/cpf_validator.dart';
 import 'package:cpf_cnpj_validator/cnpj_validator.dart';
 import 'package:interprise_calendar/app/core/enums/login_enum.dart';
-import 'package:interprise_calendar/app/login/presentations/login_controller.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
+
+import 'dart:math'; // Import para usar o valor de 'pi' na rotação
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -31,25 +33,16 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   bool _acceptTerms = false;
   UserType _selectedUserType = UserType.pessoaFisica;
 
-  late AnimationController _animationController;
-
   LoginController get controller => Get.find();
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _animationController.forward();
     _loadUserData();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -62,7 +55,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = prefs.getString('saved_email');
-    if (savedEmail != null) {
+    if (savedEmail != null && mounted) {
       setState(() {
         _emailController.text = savedEmail;
       });
@@ -78,27 +71,20 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     setState(() {
       _isLogin = !_isLogin;
     });
-    _animationController.reset();
-    _animationController.forward();
   }
 
   Future<void> _submit() async {
+    // Esconde o teclado
+    FocusScope.of(context).unfocus();
+
     if (!_formKey.currentState!.validate()) return;
 
     if (!_isLogin && !_acceptTerms) {
-      Get.snackbar(
-        'Erro',
-        'Você deve aceitar os termos de uso',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(28),
-        colorText: Colors.white,
-      );
+      Get.snackbar('Erro', 'Você deve aceitar os termos de uso');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       if (_isLogin) {
@@ -112,31 +98,15 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
           document: _documentController.text,
           name: _nameController.text,
           address: _addressController.text,
+          aceitarTermos: _acceptTerms ? 'Sim' : 'Não',
         );
-        Get.snackbar(
-          'Sucesso',
-          'Cadastro realizado com sucesso!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withAlpha(28),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-        setState(() {
-          _isLogin = true;
-        });
+        Get.snackbar('Sucesso', 'Cadastro realizado com sucesso!');
+        if (mounted) setState(() => _isLogin = true);
       }
     } catch (e) {
-      Get.snackbar(
-        'Erro',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(28),
-        colorText: Colors.white,
-      );
+      Get.snackbar('Erro', e.toString());
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -144,430 +114,349 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isTablet = constraints.maxWidth > 600;
+      // 1. Stack para colocar o loading sobre a tela
+      body: Stack(
+        children: [
+          // Conteúdo principal da página
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildLogo(),
+                    const SizedBox(height: 32),
+                    _buildAnimatedSwitcher(),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-            if (isTablet) {
-              return _buildTabletLayout();
-            } else {
-              return _buildMobileLayout();
-            }
-          },
+          // 2. Overlay de carregamento condicional
+          if (_isLoading) _buildLoadingOverlay(),
+        ],
+      ),
+    );
+  }
+
+  // 3. WIDGET PARA O OVERLAY DE CARREGAMENTO
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.6),
+      child: const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
         ),
       ),
     );
   }
 
-  Widget _buildTabletLayout() {
-    return Row(
-      children: [
-        // Lado esquerdo - Logo com gradiente
-        Expanded(
-          flex: 3,
-          child: Container(
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFF8F9FA),
-                  Color(0xFFE9ECEF),
-                  Color(0xFFDEE2E6),
-                ],
-                stops: [0.0, 0.5, 1.0],
-              ),
-            ),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.all(32),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  fit: BoxFit.contain,
-                  height: 120,
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Lado direito - Formulário
-        Expanded(
-          flex: 2,
-          child: Container(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: SingleChildScrollView(child: _buildFormContent()),
-            ),
-          ),
-        ),
-      ],
+  Widget _buildAnimatedSwitcher() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 800),
+      transitionBuilder: (child, animation) {
+        final rotateAnimation = Tween<double>(
+          begin: pi,
+          end: 0.0,
+        ).animate(animation);
+        return AnimatedBuilder(
+          animation: rotateAnimation,
+          child: child,
+          builder: (context, child) {
+            final isUnder = (ValueKey(_isLogin) != child?.key);
+            var value =
+                isUnder
+                    ? min(rotateAnimation.value, pi / 2)
+                    : rotateAnimation.value;
+            return Transform(
+              transform:
+                  Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(value),
+              alignment: Alignment.center,
+              child: child,
+            );
+          },
+        );
+      },
+      switchInCurve: Curves.easeInCubic,
+      switchOutCurve: Curves.easeOutCubic,
+      child: _isLogin ? _buildLoginForm() : _buildRegisterForm(),
     );
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildLogo() {
+    return Image.asset(
+      'assets/images/logo.png',
+      height: 200,
+      fit: BoxFit.contain,
+    );
+  }
+
+  Widget _buildLoginForm() {
     return Column(
+      key: const ValueKey(true),
       children: [
-        // Área superior com logo - mais compacta
-        Container(
-          height: MediaQuery.of(context).size.height * 0.25,
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF), Color(0xFFDEE2E6)],
-              stops: [0.0, 0.6, 1.0],
-            ),
-          ),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              child: Image.asset(
-                'assets/images/logo.png',
-                fit: BoxFit.contain,
-                height: 80,
-              ),
-            ),
-          ),
+        _buildSimpleTextField(
+          controller: _emailController,
+          hintText: 'Email',
+          keyboardType: TextInputType.emailAddress,
+          validator:
+              (value) =>
+                  !GetUtils.isEmail(value ?? '')
+                      ? 'Digite um e-mail válido'
+                      : null,
         ),
-        // Área do formulário - expansível
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: _buildFormContent(),
+        const SizedBox(height: 36),
+        _buildSimpleTextField(
+          controller: _passwordController,
+          hintText: 'Senha',
+          obscureText: _obscurePassword,
+          suffixIcon: _buildObscureToggle(
+            () => setState(() => _obscurePassword = !_obscurePassword),
+            _obscurePassword,
+          ),
+          validator:
+              (value) =>
+                  (value ?? '').length < 6
+                      ? 'A senha deve ter pelo menos 6 caracteres'
+                      : null,
+        ),
+
+        const SizedBox(height: 65),
+
+        _buildPrimaryButton(title: 'Login', onPressed: _submit),
+        const SizedBox(height: 36),
+        _buildSecondaryButton(title: 'Cadastre-se', onPressed: _toggleMode),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed:
+              () => DialogsHomeViewPessoaFisica.showResetPasswordDialog(),
+          child: const Text(
+            'Esqueci a senha',
+            style: TextStyle(
+              color: Color(0xFF6366F1),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFormContent() {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Logo/Título - mais compacto
-            const Text(
-              'Trampos',
-              style: TextStyle(
-                fontSize: 42,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF333333),
-                letterSpacing: 1.0,
-              ),
-              textAlign: TextAlign.center,
+  Widget _buildRegisterForm() {
+    return Column(
+      key: const ValueKey(false),
+      children: [
+        _buildUserTypeDropdown(),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _nameController,
+          hintText:
+              _selectedUserType == UserType.pessoaFisica
+                  ? 'Nome Completo'
+                  : 'Razão Social',
+          validator:
+              (value) => (value ?? '').length < 6 ? 'Nome muito curto' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _documentController,
+          hintText: _selectedUserType.documentLabel,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(
+              _selectedUserType == UserType.pessoaFisica ? 11 : 14,
             ),
-            const SizedBox(height: 16),
-
-            // Formulário
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  // Campos do cadastro (se não for login)
-                  if (!_isLogin) ...[
-                    _buildUserTypeDropdown(),
-                    const SizedBox(height: 12),
-                    _buildSimpleTextField(
-                      controller: _nameController,
-                      hintText:
-                          _selectedUserType == UserType.pessoaFisica
-                              ? 'Nome Completo'
-                              : 'Razão Social',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return _selectedUserType == UserType.pessoaFisica
-                              ? 'Digite seu nome completo'
-                              : 'Digite a razão social';
-                        }
-                        if (value.length < 6) {
-                          return 'Nome deve ter pelo menos 6 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSimpleTextField(
-                      controller: _documentController,
-                      hintText: _selectedUserType.documentLabel,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(
-                          _selectedUserType == UserType.pessoaFisica ? 11 : 14,
-                        ),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Digite seu ${_selectedUserType.documentLabel}';
-                        }
-                        if (_selectedUserType == UserType.pessoaFisica) {
-                          if (!CPFValidator.isValid(value)) {
-                            return 'CPF inválido';
-                          }
-                        } else {
-                          if (!CNPJValidator.isValid(value)) {
-                            return 'CNPJ inválido';
-                          }
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSimpleTextField(
-                      controller: _addressController,
-                      hintText: 'Endereço',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Digite seu endereço';
-                        }
-                        if (value.length < 10) {
-                          return 'Endereço deve ter pelo menos 10 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-
-                  // Email
-                  _buildSimpleTextField(
-                    controller: _emailController,
-                    hintText: 'Email',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Digite seu e-mail';
-                      }
-                      if (!GetUtils.isEmail(value)) {
-                        return 'Digite um e-mail válido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Senha
-                  _buildSimpleTextField(
-                    controller: _passwordController,
-                    hintText: 'Senha',
-                    obscureText: _obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.grey[600],
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Digite sua senha';
-                      }
-                      if (value.length < 6) {
-                        return 'A senha deve ter pelo menos 6 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  // Confirmar senha (apenas no cadastro)
-                  if (!_isLogin) ...[
-                    const SizedBox(height: 12),
-                    _buildSimpleTextField(
-                      controller: _confirmPasswordController,
-                      hintText: 'Confirmar Senha',
-                      obscureText: _obscureConfirmPassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.grey[600],
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Confirme sua senha';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'As senhas não coincidem';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-
-                  const SizedBox(height: 16),
-
-                  // Termos de uso (apenas no cadastro)
-                  if (!_isLogin)
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _acceptTerms,
-                          onChanged: (value) {
-                            setState(() {
-                              _acceptTerms = value ?? false;
-                            });
-                          },
-                          activeColor: const Color(0xFF6366F1),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Aceito os termos de uso e política de privacidade',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  if (!_isLogin) const SizedBox(height: 16),
-
-                  // Botão principal
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child:
-                          _isLoading
-                              ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                              : Text(
-                                _isLogin ? 'Login' : 'Cadastrar',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Link para alternar entre login/cadastro
-                  Container(
-                    width: double.infinity,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: TextButton(
-                      onPressed: _toggleMode,
-                      child: Text(
-                        _isLogin ? 'Cadastre-se' : 'Já tem conta? Faça login',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF333333),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Link "Esqueci a senha" (apenas no login)
-                  if (_isLogin) ...[
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed:
-                          () =>
-                              DialogsHomeViewPessoaFisica.showResetPasswordDialog(),
-                      child: const Text(
-                        'Esqueci a senha',
-                        style: TextStyle(
-                          color: Color(0xFF6366F1),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+          ],
+          validator: (value) {
+            final doc = value ?? '';
+            if (doc.isEmpty)
+              return 'Digite seu ${_selectedUserType.documentLabel}';
+            if (_selectedUserType == UserType.pessoaFisica)
+              return CPFValidator.isValid(doc) ? null : 'CPF inválido';
+            return CNPJValidator.isValid(doc) ? null : 'CNPJ inválido';
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _addressController,
+          hintText: 'Endereço',
+          validator:
+              (value) =>
+                  (value ?? '').length < 10
+                      ? 'Endereço deve ter pelo menos 10 caracteres'
+                      : null,
+        ),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _emailController,
+          hintText: 'Email',
+          keyboardType: TextInputType.emailAddress,
+          validator:
+              (value) =>
+                  !GetUtils.isEmail(value ?? '')
+                      ? 'Digite um e-mail válido'
+                      : null,
+        ),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _passwordController,
+          hintText: 'Senha',
+          obscureText: _obscurePassword,
+          suffixIcon: _buildObscureToggle(
+            () => setState(() => _obscurePassword = !_obscurePassword),
+            _obscurePassword,
+          ),
+          validator:
+              (value) =>
+                  (value ?? '').length < 6 ? 'Mínimo 6 caracteres' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _confirmPasswordController,
+          hintText: 'Confirmar Senha',
+          obscureText: _obscureConfirmPassword,
+          suffixIcon: _buildObscureToggle(
+            () => setState(
+              () => _obscureConfirmPassword = !_obscureConfirmPassword,
+            ),
+            _obscureConfirmPassword,
+          ),
+          validator:
+              (value) =>
+                  value != _passwordController.text
+                      ? 'As senhas não coincidem'
+                      : null,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Checkbox(
+              value: _acceptTerms,
+              onChanged:
+                  (value) => setState(() => _acceptTerms = value ?? false),
+              activeColor: const Color(0xFF6366F1),
+            ),
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() => _acceptTerms = !_acceptTerms),
+                child: Text(
+                  'Aceito os termos de uso e política de privacidade',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
               ),
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        _buildPrimaryButton(title: 'Cadastrar', onPressed: _submit),
+        const SizedBox(height: 16),
+        _buildSecondaryButton(
+          title: 'Já tem conta? Faça login',
+          onPressed: _toggleMode,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryButton({
+    required String title,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6366F1),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 0,
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildUserTypeDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade600, width: 2),
-        color: Colors.white,
-      ),
-      child: DropdownButtonFormField<UserType>(
-        value: _selectedUserType,
-        decoration: const InputDecoration(
-          labelText: 'Tipo de Usuário',
-          labelStyle: TextStyle(
-            color: Color(0xFF212529),
+  Widget _buildSecondaryButton({
+    required String title,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          backgroundColor: Colors.grey[100],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFF333333),
             fontWeight: FontWeight.w500,
           ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
-        dropdownColor: Colors.white,
-        items:
-            UserType.values.map((UserType type) {
-              return DropdownMenuItem<UserType>(
-                value: type,
-                child: Text(
-                  type.displayName,
-                  style: const TextStyle(
-                    color: Color(0xFF212529),
-                    fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildObscureToggle(VoidCallback onPressed, bool isObscure) {
+    return IconButton(
+      icon: Icon(
+        isObscure ? Icons.visibility_off : Icons.visibility,
+        color: Colors.grey[600],
+      ),
+      onPressed: onPressed,
+    );
+  }
+
+  Widget _buildUserTypeDropdown() {
+    return DropdownButtonFormField<UserType>(
+      value: _selectedUserType,
+      decoration: _inputDecoration(hintText: 'Tipo de Usuário'),
+      dropdownColor: Colors.white,
+      items:
+          UserType.values
+              .map(
+                (type) => DropdownMenuItem<UserType>(
+                  value: type,
+                  child: Text(
+                    type.displayName,
+                    style: const TextStyle(
+                      color: Color(0xFF212529),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
-        onChanged: (UserType? newValue) {
-          if (newValue != null) {
-            setState(() {
-              _selectedUserType = newValue;
-              _documentController.clear();
-            });
-          }
-        },
-      ),
+              )
+              .toList(),
+      onChanged: (newValue) {
+        if (newValue != null) {
+          setState(() {
+            _selectedUserType = newValue;
+            _documentController.clear();
+          });
+        }
+      },
     );
   }
 
@@ -580,38 +469,67 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      decoration: BoxDecoration(
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      obscureText: obscureText,
+      validator: validator,
+      style: const TextStyle(
+        fontSize: 16,
+        color: Color(0xFF212529),
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: _inputDecoration(hintText: hintText, suffixIcon: suffixIcon),
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String hintText,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      labelText: hintText,
+      hintStyle: const TextStyle(
+        color: Color(0xFF6C757D),
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+      ),
+      labelStyle: const TextStyle(
+        color: Color(0xFF6C757D),
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+      ),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: Colors.white,
+      errorStyle: TextStyle(
+        color: Colors.red.shade800,
+        fontWeight: FontWeight.bold,
+        fontSize: 13,
+      ),
+      border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade600, width: 2),
-        color: Colors.white,
+        borderSide: BorderSide(color: Colors.grey.shade500, width: 1.5),
       ),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        inputFormatters: inputFormatters,
-        obscureText: obscureText,
-        validator: validator,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Color(0xFF212529),
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFF6C757D),
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-          ),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade500, width: 1.5),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.red.shade800, width: 2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.red.shade800, width: 2.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 }
