@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:interprise_calendar/app/core/configs/global_themes/global_theme_controller.dart';
 import 'package:interprise_calendar/app/login/presentations/login_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,7 @@ import 'package:cpf_cnpj_validator/cpf_validator.dart';
 import 'package:cpf_cnpj_validator/cnpj_validator.dart';
 import 'package:interprise_calendar/app/core/enums/login_enum.dart';
 
-import 'dart:math'; // Import para usar o valor de 'pi' na rotação
+import 'dart:math';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -33,7 +34,9 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   bool _acceptTerms = false;
   UserType _selectedUserType = UserType.pessoaFisica;
 
-  LoginController get controller => Get.find();
+  LoginController controller = LoginController(Get.find());
+  final GlobalThemeController themeController =
+      Get.find<GlobalThemeController>();
 
   @override
   void initState() {
@@ -74,7 +77,6 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   }
 
   Future<void> _submit() async {
-    // Esconde o teclado
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) return;
@@ -112,43 +114,61 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      // 1. Stack para colocar o loading sobre a tela
-      body: Stack(
-        children: [
-          // Conteúdo principal da página
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 32.0,
+    return Obx(() {
+      final isDark = themeController.isDarkMode;
+
+      // ALTERAÇÃO: Fundo preto puro para o modo escuro.
+      final darkBackgroundColor = Colors.black;
+      final lightBackgroundColor = Colors.white;
+
+      return Scaffold(
+        backgroundColor: isDark ? darkBackgroundColor : lightBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: isDark ? darkBackgroundColor : lightBackgroundColor,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: Icon(
+                isDark ? Icons.light_mode : Icons.dark_mode,
+                color: isDark ? Colors.white : Colors.grey[900],
               ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildLogo(),
-                    const SizedBox(height: 32),
-                    _buildAnimatedSwitcher(),
-                  ],
+              onPressed: () => themeController.toggleTheme(),
+              tooltip: isDark ? 'Modo Claro' : 'Modo Escuro',
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 32.0,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildLogo(isDark),
+                      const SizedBox(height: 32),
+                      _buildAnimatedSwitcher(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-
-          // 2. Overlay de carregamento condicional
-          if (_isLoading) _buildLoadingOverlay(),
-        ],
-      ),
-    );
+            if (_isLoading) _buildLoadingOverlay(),
+          ],
+        ),
+      );
+    });
   }
 
   // 3. WIDGET PARA O OVERLAY DE CARREGAMENTO
   Widget _buildLoadingOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.6),
+      color: Colors.black.withAlpha(26),
       child: const Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -191,10 +211,45 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildLogo() {
+  // Widget _buildLogo(bool isDark) {
+  //   return Column(
+  //     children: [
+  //       if (isDark)
+  //         // No modo escuro, logo sem container para manter cor uniforme
+  //         Image.asset(
+  //           'assets/images/logo_black.png',
+  //           height: 180,
+  //           fit: BoxFit.contain,
+  //         )
+  //       else
+  //         // No modo claro, container com background
+  //         Container(
+  //           padding: const EdgeInsets.all(16),
+  //           decoration: BoxDecoration(
+  //             color: Colors.grey[50],
+  //             borderRadius: BorderRadius.circular(12),
+  //             boxShadow: [
+  //               BoxShadow(
+  //                 color: Colors.grey.withAlpha(21),
+  //                 blurRadius: 8,
+  //                 offset: const Offset(0, 2),
+  //               ),
+  //             ],
+  //           ),
+  //           child: Image.asset(
+  //             'assets/images/logo.png',
+  //             height: 180,
+  //             fit: BoxFit.contain,
+  //           ),
+  //         ),
+  //     ],
+  //   );
+  // }
+  Widget _buildLogo(bool isDark) {
+    // ALTERAÇÃO: Lógica simplificada para alternar as logos.
     return Image.asset(
-      'assets/images/logo.png',
-      height: 200,
+      isDark ? 'assets/images/logo_black.png' : 'assets/images/logo.png',
+      height: 180,
       fit: BoxFit.contain,
     );
   }
@@ -279,10 +334,12 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
           ],
           validator: (value) {
             final doc = value ?? '';
-            if (doc.isEmpty)
+            if (doc.isEmpty) {
               return 'Digite seu ${_selectedUserType.documentLabel}';
-            if (_selectedUserType == UserType.pessoaFisica)
+            }
+            if (_selectedUserType == UserType.pessoaFisica) {
               return CPFValidator.isValid(doc) ? null : 'CPF inválido';
+            }
             return CNPJValidator.isValid(doc) ? null : 'CNPJ inválido';
           },
         ),
@@ -398,20 +455,26 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     required String title,
     required VoidCallback onPressed,
   }) {
+    final isDark = themeController.isDarkMode;
+
+    // ALTERAÇÃO: Cor do botão secundário ajustada para o tema "true black".
+    final darkButtonColor = const Color(0xFF2A2A2A);
+    final lightButtonColor = Colors.grey[100];
+
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          backgroundColor: Colors.grey[100],
+          backgroundColor: isDark ? darkButtonColor : lightButtonColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
-            color: Color(0xFF333333),
+            color: isDark ? Colors.white : const Color(0xFF333333),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -430,10 +493,12 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   }
 
   Widget _buildUserTypeDropdown() {
+    final isDark = themeController.isDarkMode;
+
     return DropdownButtonFormField<UserType>(
       value: _selectedUserType,
       decoration: _inputDecoration(hintText: 'Tipo de Usuário'),
-      dropdownColor: Colors.white,
+      dropdownColor: isDark ? Colors.grey[700] : Colors.white,
       items:
           UserType.values
               .map(
@@ -441,8 +506,8 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                   value: type,
                   child: Text(
                     type.displayName,
-                    style: const TextStyle(
-                      color: Color(0xFF212529),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF212529),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -469,15 +534,17 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
+    final isDark = themeController.isDarkMode;
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       obscureText: obscureText,
       validator: validator,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
-        color: Color(0xFF212529),
+        color: isDark ? Colors.white : const Color(0xFF212529),
         fontWeight: FontWeight.w500,
       ),
       decoration: _inputDecoration(hintText: hintText, suffixIcon: suffixIcon),
@@ -488,46 +555,53 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     required String hintText,
     Widget? suffixIcon,
   }) {
+    final isDark = themeController.isDarkMode;
+
+    // ALTERAÇÃO: Cores dos campos de texto para o tema "true black".
+    final darkFillColor = const Color(0xFF2A2A2A);
+    final darkBorderColor = Colors.grey[800]!;
+
     return InputDecoration(
       hintText: hintText,
       labelText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6C757D),
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
+      hintStyle: TextStyle(
+        color: isDark ? Colors.grey[400] : const Color(0xFF6C757D),
       ),
-      labelStyle: const TextStyle(
-        color: Color(0xFF6C757D),
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.grey[300] : const Color(0xFF6C757D),
       ),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: isDark ? darkFillColor : Colors.white,
       errorStyle: TextStyle(
-        color: Colors.red.shade800,
+        color: Colors.red.shade400, // Tom de vermelho mais suave para dark mode
         fontWeight: FontWeight.bold,
-        fontSize: 13,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey.shade500, width: 1.5),
+        borderSide: BorderSide(color: darkBorderColor, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey.shade500, width: 1.5),
+        borderSide: BorderSide(
+          color: isDark ? darkBorderColor : Colors.grey.shade500,
+          width: 1.5,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+        borderSide: BorderSide(
+          color: isDark ? Colors.tealAccent : const Color(0xFF6366F1),
+          width: 2,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.red.shade800, width: 2),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.red.shade800, width: 2.5),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 2.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
