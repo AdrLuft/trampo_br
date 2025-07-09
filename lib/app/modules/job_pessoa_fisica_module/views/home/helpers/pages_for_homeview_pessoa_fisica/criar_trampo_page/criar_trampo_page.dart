@@ -131,8 +131,8 @@ class _CriarPageState extends State<CriarPage> {
             ElevatedButton(
               onPressed: () => onAdd(items, controller),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -147,9 +147,17 @@ class _CriarPageState extends State<CriarPage> {
             ? Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(
+                  color:
+                      isDark
+                          ? Colors.white.withAlpha(38)
+                          : Theme.of(context).colorScheme.outline,
+                ),
                 borderRadius: BorderRadius.circular(12),
-                color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                color:
+                    isDark
+                        ? Colors.white.withAlpha(15)
+                        : Theme.of(context).colorScheme.surface,
               ),
               child: CriarTrampoPageHelpers.buildChips(
                 items,
@@ -180,7 +188,10 @@ class _CriarPageState extends State<CriarPage> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.teal.shade400, Colors.teal.shade600],
+                    colors: [
+                      Theme.of(context).colorScheme.primary.withAlpha(204),
+                      Theme.of(context).colorScheme.primary,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -193,22 +204,31 @@ class _CriarPageState extends State<CriarPage> {
                     ),
                   ],
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    Icon(Icons.work_outline, size: 40, color: Colors.white),
-                    SizedBox(height: 8),
+                    Icon(
+                      Icons.work_outline,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    const SizedBox(height: 8),
                     Text(
                       'Criar Novo Trampo',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Preencha os dados abaixo',
-                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary.withAlpha(179),
+                      ),
                     ),
                   ],
                 ),
@@ -232,9 +252,17 @@ class _CriarPageState extends State<CriarPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(
+                    color:
+                        isDark
+                            ? Colors.white.withAlpha(38)
+                            : Theme.of(context).colorScheme.outline,
+                  ),
                   borderRadius: BorderRadius.circular(12),
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                  color:
+                      isDark
+                          ? Colors.white.withAlpha(15)
+                          : Theme.of(context).colorScheme.surface,
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -251,7 +279,7 @@ class _CriarPageState extends State<CriarPage> {
                                 Icon(
                                   CriarTrampoPageHelpers.getIconForTipo(tipo),
                                   size: 20,
-                                  color: Colors.teal,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(tipo),

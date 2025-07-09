@@ -74,7 +74,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
           // TabBar
           Container(
             decoration: BoxDecoration(
-              color: isDark ? Colors.grey.shade900 : Colors.white,
+              color: Colors.transparent,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -85,9 +85,9 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
             ),
             child: TabBar(
               controller: _tabController,
-              labelColor: Colors.teal,
-              unselectedLabelColor: isDark ? Colors.white70 : Colors.grey,
-              indicatorColor: Colors.teal,
+              labelColor: const Color(0xFF6366F1),
+              unselectedLabelColor: Colors.white.withAlpha(153),
+              indicatorColor: const Color(0xFF6366F1),
               indicatorWeight: 3,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
@@ -134,7 +134,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Colors.teal),
+            child: CircularProgressIndicator(color: Color(0xFF6366F1)),
           );
         }
 
@@ -171,7 +171,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     return Obx(() {
       if (_controller.isLoading.value) {
         return const Center(
-          child: CircularProgressIndicator(color: Colors.teal),
+          child: CircularProgressIndicator(color: Color(0xFF6366F1)),
         );
       }
 
@@ -222,15 +222,9 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: Colors.white.withAlpha(15),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withAlpha(38), width: 1.5),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -246,13 +240,13 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.teal.shade100,
+                      color: const Color(0xFF6366F1).withAlpha(26),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       data['tipoVaga'] ?? 'Não especificado',
-                      style: TextStyle(
-                        color: Colors.teal.shade700,
+                      style: const TextStyle(
+                        color: Color(0xFF6366F1),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -337,7 +331,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                               },
                               icon: Icon(
                                 Icons.bookmark_border,
-                                color: Colors.teal,
+                                color: const Color(0xFF6366F1),
                                 size: 24,
                               ),
                               tooltip: 'Salvar vaga',
@@ -345,7 +339,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                             Text(
                               'Salvar Vaga',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: Colors.white.withAlpha(179),
                                 fontSize: 14,
                               ),
                             ),
@@ -363,7 +357,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

@@ -38,11 +38,17 @@ class SalvosPage extends StatelessWidget {
           itemBuilder: (context, index) {
             final vaga = vagas[index];
             return ListTile(
-              leading: const Icon(Icons.bookmark, color: Colors.teal),
+              leading: Icon(
+                Icons.bookmark,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               title: Text(vaga['titulo'] ?? vaga['tipoVaga'] ?? 'Vaga'),
               // subtitle: Text(vaga['descricao'] ?? ''),
               trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 onPressed: () {
                   controller.removerVagaSalva(
                     CreateTramposModel.fromJson(vaga).toEntity(),

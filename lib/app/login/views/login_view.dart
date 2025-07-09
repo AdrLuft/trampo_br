@@ -124,6 +124,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       return Scaffold(
         backgroundColor: isDark ? darkBackgroundColor : lightBackgroundColor,
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           backgroundColor: isDark ? darkBackgroundColor : lightBackgroundColor,
           elevation: 0,
           actions: [
@@ -171,7 +172,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       color: Colors.black.withAlpha(26),
       child: const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
         ),
       ),
     );
@@ -211,40 +212,6 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     );
   }
 
-  // Widget _buildLogo(bool isDark) {
-  //   return Column(
-  //     children: [
-  //       if (isDark)
-  //         // No modo escuro, logo sem container para manter cor uniforme
-  //         Image.asset(
-  //           'assets/images/logo_black.png',
-  //           height: 180,
-  //           fit: BoxFit.contain,
-  //         )
-  //       else
-  //         // No modo claro, container com background
-  //         Container(
-  //           padding: const EdgeInsets.all(16),
-  //           decoration: BoxDecoration(
-  //             color: Colors.grey[50],
-  //             borderRadius: BorderRadius.circular(12),
-  //             boxShadow: [
-  //               BoxShadow(
-  //                 color: Colors.grey.withAlpha(21),
-  //                 blurRadius: 8,
-  //                 offset: const Offset(0, 2),
-  //               ),
-  //             ],
-  //           ),
-  //           child: Image.asset(
-  //             'assets/images/logo.png',
-  //             height: 180,
-  //             fit: BoxFit.contain,
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
   Widget _buildLogo(bool isDark) {
     // ALTERAÇÃO: Lógica simplificada para alternar as logos.
     return Image.asset(
@@ -470,14 +437,36 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
           backgroundColor: isDark ? darkButtonColor : lightButtonColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            color: isDark ? Colors.white : const Color(0xFF333333),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        child:
+            title.contains('Faça login')
+                ? RichText(
+                  text: TextSpan(
+                    text: 'Já tem conta? ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDark ? Colors.white : const Color(0xFF333333),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Faça login',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: const Color(0xFF6366F1),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                : Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white : const Color(0xFF333333),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
       ),
     );
   }
@@ -590,10 +579,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(
-          color: isDark ? Colors.tealAccent : const Color(0xFF6366F1),
-          width: 2,
-        ),
+        borderSide: BorderSide(color: const Color(0xFF6366F1), width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

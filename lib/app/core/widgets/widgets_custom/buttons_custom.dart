@@ -41,13 +41,16 @@ class CustomButtons extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, color: textColor ?? Colors.white),
+              Icon(
+                icon,
+                color: textColor ?? Theme.of(context).colorScheme.onPrimary,
+              ),
               const SizedBox(width: 8),
             ],
             Text(
               text,
               style: TextStyle(
-                color: textColor ?? Colors.white,
+                color: textColor ?? Theme.of(context).colorScheme.onPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),

@@ -49,17 +49,25 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Trampos BR',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
         ),
-        backgroundColor: Colors.teal,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
+            icon: Icon(
+              Icons.notifications,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
             onPressed: () {},
           ),
         ],
@@ -70,9 +78,12 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
+        backgroundColor:
+            Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withAlpha(153),
         selectedLabelStyle: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -106,7 +117,10 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
             width: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.teal.shade400, Colors.teal.shade600],
+                colors: [
+                  const Color(0xFF6366F1).withAlpha(204),
+                  const Color(0xFF6366F1),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -120,7 +134,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                     width: 120,
                     height: 75,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
@@ -130,24 +144,29 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.person,
                       size: 40,
-                      color: Colors.teal,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Trampos BR',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'Menu Principal',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onPrimary.withAlpha(179),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -238,12 +257,20 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
     return ListTile(
       leading: Icon(
         icon,
-        color: textColor ?? (isDark ? Colors.white : Colors.grey.shade700),
+        color:
+            textColor ??
+            (isDark
+                ? Colors.white.withAlpha(204)
+                : Theme.of(context).colorScheme.onSurface),
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: textColor ?? (isDark ? Colors.white : Colors.grey.shade800),
+          color:
+              textColor ??
+              (isDark
+                  ? Colors.white.withAlpha(230)
+                  : Theme.of(context).colorScheme.onSurface),
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -275,7 +302,10 @@ class _InicioPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.teal.shade400, Colors.teal.shade600],
+                colors: [
+                  const Color(0xFF6366F1).withAlpha(204),
+                  const Color(0xFF6366F1),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -291,20 +321,27 @@ class _InicioPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(
+                Center(
                   child: Text(
                     'Bem-vindo!',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      //color: Theme.of(context).colorScheme.onPrimary,
                       color: Colors.white,
                     ),
                   ),
                 ),
-                SizedBox(height: 8),
-                const Text(
+                const SizedBox(height: 8),
+                Text(
                   'Encontre as melhores oportunidades de trabalho',
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 16,
+                    // color: Theme.of(
+                    //   context,
+                    // ).colorScheme.onPrimary.withAlpha(179),
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -332,8 +369,10 @@ class _InicioPage extends StatelessWidget {
                     .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.teal),
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 );
               }
 
@@ -341,12 +380,19 @@ class _InicioPage extends StatelessWidget {
                 return Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.error, size: 60, color: Colors.red),
+                      Icon(
+                        Icons.error,
+                        size: 60,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Erro ao carregar trampos',
                         style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
+                          color:
+                              isDark
+                                  ? Colors.white.withAlpha(230)
+                                  : Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                         ),
                       ),
@@ -359,12 +405,24 @@ class _InicioPage extends StatelessWidget {
                 return Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.work_off, size: 60, color: Colors.grey),
+                      Icon(
+                        Icons.work_off,
+                        size: 60,
+                        color:
+                            isDark
+                                ? Colors.white.withAlpha(179)
+                                : Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withAlpha(153),
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Nenhum trampo cadastrado',
                         style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
+                          color:
+                              isDark
+                                  ? Colors.white.withAlpha(230)
+                                  : Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                         ),
                       ),
@@ -372,7 +430,12 @@ class _InicioPage extends StatelessWidget {
                       Text(
                         'Crie o primeiro trampo na aba "Criar"',
                         style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.grey,
+                          color:
+                              isDark
+                                  ? Colors.white.withAlpha(179)
+                                  : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withAlpha(153),
                           fontSize: 14,
                         ),
                       ),
@@ -399,128 +462,148 @@ class _InicioPage extends StatelessWidget {
   }
 
   Widget _buildTrampoCardFromData(Map<String, dynamic> data, bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        Get.to(() => detalhes.DetalhesVagaPage(vagaData: data, vagaId: ''));
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return Builder(
+      builder: (context) {
+        return GestureDetector(
+          onTap: () {
+            Get.to(() => detalhes.DetalhesVagaPage(vagaData: data, vagaId: ''));
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color:
+                  isDark
+                      ? Colors.white.withAlpha(15)
+                      : Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  isDark
+                      ? Border.all(
+                        color: Colors.white.withAlpha(38),
+                        width: 1.5,
+                      )
+                      : null,
+              boxShadow:
+                  isDark
+                      ? null
+                      : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Título da vaga
-              Text(
-                data['tipoVaga'] ?? 'Trampo',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Criador
-              Row(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.person,
-                    size: 16,
-                    color: isDark ? Colors.white70 : Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 4),
+                  // Título da vaga
                   Text(
-                    data['createTrampoNome'] ?? 'Usuário',
+                    data['tipoVaga'] ?? 'Trampo',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Criador
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person,
+                        size: 16,
+                        color: isDark ? Colors.white70 : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        data['createTrampoNome'] ?? 'Usuário',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  StatusVagaWidget(status: data['status'] ?? 'Disponível'),
+                  const SizedBox(height: 12),
+
+                  // Descrição
+                  Text(
+                    data['titulo'] ?? 'Sem titulo',
+                    style: TextStyle(
+                      fontSize: 18,
                       color: isDark ? Colors.white70 : Colors.grey.shade700,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              // Implementação do método de salvar vaga
+                            },
+                            icon: Icon(
+                              Icons.bookmark_border,
+                              color: const Color(0xFF6366F1),
+                              size: 24,
+                            ),
+                            tooltip: 'Salvar vaga',
+                          ),
+                        ],
+                      ),
+                      const Text(
+                        'Salvar Vaga',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.snackbar(
+                        'Interesse',
+                        'Funcionalidade de candidatura em desenvolvimento',
+                        backgroundColor: Colors.orange,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 2),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Candidatar',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              StatusVagaWidget(status: data['status'] ?? 'Disponível'),
-              const SizedBox(height: 12),
-
-              // Descrição
-              Text(
-                data['titulo'] ?? 'Sem titulo',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: isDark ? Colors.white70 : Colors.grey.shade700,
-                  height: 1.3,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // Implementação do método de salvar vaga
-                        },
-                        icon: Icon(
-                          Icons.bookmark_border,
-                          color: Colors.teal,
-                          size: 24,
-                        ),
-                        tooltip: 'Salvar vaga',
-                      ),
-                    ],
-                  ),
-                  const Text(
-                    'Salvar Vaga',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Get.snackbar(
-                    'Interesse',
-                    'Funcionalidade de candidatura em desenvolvimento',
-                    backgroundColor: Colors.orange,
-                    colorText: Colors.white,
-                    duration: const Duration(seconds: 2),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Candidatar',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

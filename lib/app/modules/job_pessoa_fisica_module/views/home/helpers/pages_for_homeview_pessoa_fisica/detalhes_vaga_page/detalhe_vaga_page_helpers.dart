@@ -8,7 +8,7 @@ class DetalheVagaPageHelpers {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle, size: 16, color: Colors.teal),
+          Icon(Icons.check_circle, size: 16, color: const Color(0xFF6366F1)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -36,22 +36,29 @@ class DetalheVagaPageHelpers {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.white,
+        color: isDark ? Colors.white.withAlpha(15) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(21),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border:
+            isDark
+                ? Border.all(color: Colors.white.withAlpha(38), width: 1.5)
+                : null,
+        boxShadow:
+            isDark
+                ? null
+                : [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(21),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: Colors.teal),
+              Icon(icon, size: 20, color: const Color(0xFF6366F1)),
               const SizedBox(width: 8),
               Text(
                 title,

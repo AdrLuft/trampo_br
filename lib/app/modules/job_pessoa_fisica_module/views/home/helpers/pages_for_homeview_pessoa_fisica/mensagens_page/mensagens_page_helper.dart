@@ -68,8 +68,8 @@ class _MensagensPageState extends State<MensagensPage> {
           'Mensagens',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -85,7 +85,7 @@ class _MensagensPageState extends State<MensagensPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.teal,
+              color: Theme.of(context).colorScheme.primary,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -103,8 +103,11 @@ class _MensagensPageState extends State<MensagensPage> {
               },
               decoration: InputDecoration(
                 hintText: 'Buscar conversas...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                fillColor: Colors.white,
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                ),
+                fillColor: Theme.of(context).cardTheme.color,
                 filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -182,14 +185,14 @@ class _MensagensPageState extends State<MensagensPage> {
             conversa.naoLidas > 0
                 ? Container(
                   padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.error,
                     shape: BoxShape.circle,
                   ),
                   child: Text(
                     conversa.naoLidas.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onError,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -206,7 +209,7 @@ class _MensagensPageState extends State<MensagensPage> {
   Widget _buildAvatar(Conversa conversa, bool isDark) {
     return CircleAvatar(
       radius: 25,
-      backgroundColor: Colors.teal.shade100,
+      backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(26),
       child:
           conversa.avatarUrl != null
               ? ClipOval(
@@ -221,7 +224,7 @@ class _MensagensPageState extends State<MensagensPage> {
                 conversa.tipoContato == TipoUsuario.empresa
                     ? Icons.business
                     : Icons.person,
-                color: Colors.teal,
+                color: Theme.of(context).colorScheme.primary,
                 size: 30,
               ),
     );
@@ -231,13 +234,16 @@ class _MensagensPageState extends State<MensagensPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: tipo == TipoUsuario.empresa ? Colors.blue : Colors.green,
+        color:
+            tipo == TipoUsuario.empresa
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         tipo == TipoUsuario.empresa ? 'PJ' : 'CPF',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
@@ -246,23 +252,44 @@ class _MensagensPageState extends State<MensagensPage> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Nenhuma conversa ainda',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 80,
+                color:
+                    isDark
+                        ? Colors.white.withAlpha(179)
+                        : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(153),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Nenhuma conversa ainda',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Suas conversas aparecerão aqui',
+                style: TextStyle(
+                  color:
+                      isDark
+                          ? Colors.white.withAlpha(179)
+                          : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withAlpha(153),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 8),
-          Text(
-            'Suas conversas aparecerão aqui',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

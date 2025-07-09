@@ -20,13 +20,16 @@ class StatusVagaWidget extends StatelessWidget {
         status.toLowerCase() == 'disponivel' ||
         status.toLowerCase() == 'disponível';
 
+    // Use theme colors or appropriate alternatives
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final errorColor = Theme.of(context).colorScheme.error;
+
+    final statusColor = isDisponivel ? primaryColor : errorColor;
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color:
-            isDisponivel
-                ? Colors.green.withAlpha(40)
-                : Colors.red.withAlpha(40),
+        color: statusColor.withAlpha(40),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -34,14 +37,14 @@ class StatusVagaWidget extends StatelessWidget {
         children: [
           Icon(
             isDisponivel ? Icons.event_busy_sharp : Icons.cancel,
-            color: isDisponivel ? Colors.green : Colors.red,
+            color: statusColor,
             size: iconSize,
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
             isDisponivel ? 'Disponível' : 'Encerrado',
             style: TextStyle(
-              color: isDisponivel ? Colors.green : Colors.red,
+              color: statusColor,
               fontSize: fontSize,
               fontWeight: FontWeight.w600,
             ),
