@@ -183,7 +183,7 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
         PerformanceConfig.showOptimizedSnackbar(
           title: 'Email Enviado',
           message: 'Instruções enviadas para $email',
-          backgroundColor: Colors.green,
+          backgroundColor: const Color(0xFF6366F1),
           icon: Icons.check_circle,
           duration: const Duration(seconds: 4),
         );
@@ -376,7 +376,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         PerformanceConfig.showOptimizedSnackbar(
           title: 'Sucesso',
           message: 'Senha alterada com sucesso!',
-          backgroundColor: Colors.green,
+          backgroundColor: const Color(0xFF6366F1),
           icon: Icons.check_circle,
         );
       }

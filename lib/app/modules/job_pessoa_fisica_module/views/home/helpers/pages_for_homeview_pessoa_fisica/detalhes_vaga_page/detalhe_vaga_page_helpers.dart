@@ -99,7 +99,7 @@ class DetalheVagaPageHelpers {
           children: [
             Row(
               children: [
-                Icon(Icons.checklist, color: Colors.teal, size: 24),
+                Icon(Icons.checklist, color: const Color(0xFF6366F1), size: 24),
                 const SizedBox(width: 8),
                 const Text(
                   'Dicas para Candidatura',
@@ -144,7 +144,11 @@ class DetalheVagaPageHelpers {
         children: [
           Row(
             children: [
-              Icon(Icons.contact_phone, size: 20, color: Colors.teal),
+              Icon(
+                Icons.contact_phone,
+                size: 20,
+                color: const Color(0xFF6366F1),
+              ),
               const SizedBox(width: 8),
               Text(
                 'Informações de Contato',
@@ -160,7 +164,7 @@ class DetalheVagaPageHelpers {
           if (telefone.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.phone, size: 16, color: Colors.teal),
+                Icon(Icons.phone, size: 16, color: const Color(0xFF6366F1)),
                 const SizedBox(width: 8),
                 Text(
                   'Telefone: $telefone',
@@ -177,7 +181,7 @@ class DetalheVagaPageHelpers {
           if (email.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.email, size: 16, color: Colors.teal),
+                Icon(Icons.email, size: 16, color: const Color(0xFF6366F1)),
                 const SizedBox(width: 8),
                 Text(
                   'Email: $email',
@@ -205,7 +209,7 @@ class DetalheVagaPageHelpers {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, color: Colors.teal, size: 20),
+          Icon(icon, color: const Color(0xFF6366F1), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

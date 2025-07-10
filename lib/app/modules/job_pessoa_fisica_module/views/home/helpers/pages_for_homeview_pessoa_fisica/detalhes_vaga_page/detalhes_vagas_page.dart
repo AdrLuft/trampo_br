@@ -29,7 +29,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
       Get.snackbar(
         'Informação',
         'Não há informações de contato disponíveis para esta vaga.',
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color(0xFF6366F1),
         colorText: Colors.white,
       );
       return;
@@ -60,7 +60,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
                           IconButton(
                             icon: const Icon(
                               Icons.phone,
-                              color: Colors.green,
+                              color: Color(0xFF6366F1),
                               size: 30,
                             ),
                             onPressed: () => _fazerLigacao(telefone),
@@ -74,7 +74,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
                           IconButton(
                             icon: const Icon(
                               Icons.message,
-                              color: Colors.blue,
+                              color: Color(0xFF6366F1),
                               size: 30,
                             ),
                             onPressed: () => _enviarWhatsApp(telefone),
@@ -91,7 +91,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
                           IconButton(
                             icon: const Icon(
                               Icons.copy,
-                              color: Colors.orange,
+                              color: Color(0xFF6366F1),
                               size: 30,
                             ),
                             onPressed:
@@ -124,7 +124,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
                           IconButton(
                             icon: const Icon(
                               Icons.email,
-                              color: Colors.red,
+                              color: Color(0xFF6366F1),
                               size: 30,
                             ),
                             onPressed: () => _enviarEmail(email),
@@ -138,7 +138,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
                           IconButton(
                             icon: const Icon(
                               Icons.copy,
-                              color: Colors.orange,
+                              color: Color(0xFF6366F1),
                               size: 30,
                             ),
                             onPressed:
@@ -258,7 +258,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
     Get.snackbar(
       'Copiado!',
       mensagem,
-      backgroundColor: Colors.green,
+      backgroundColor: const Color(0xFF6366F1),
       colorText: Colors.white,
       duration: const Duration(seconds: 2),
     );
@@ -305,7 +305,9 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
               );
               Get.back();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+            ),
             child: const Text('Copiar Info'),
           ),
         ],
@@ -317,7 +319,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
     Get.snackbar(
       'Candidatura',
       'Funcionalidade em desenvolvimento',
-      backgroundColor: Colors.orange,
+      backgroundColor: const Color(0xFF6366F1),
       colorText: Colors.white,
       duration: const Duration(seconds: 2),
     );
@@ -370,7 +372,7 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(titulo.isNotEmpty ? titulo : 'Detalhes da Vaga'),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF6366F1),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -432,7 +434,11 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.person, size: 18, color: Colors.teal),
+                      const Icon(
+                        Icons.person,
+                        size: 18,
+                        color: Color(0xFF6366F1),
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         widget.vagaData['createTrampoNome'] ?? 'Usuário',
@@ -561,7 +567,7 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
                     icon: const Icon(Icons.work),
                     label: const Text('Candidatar'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -617,7 +623,7 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
           Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 20, color: Colors.teal),
+                Icon(icon, size: 20, color: const Color(0xFF6366F1)),
                 const SizedBox(width: 8),
               ],
               Text(

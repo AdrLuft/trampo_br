@@ -333,7 +333,7 @@ class _CriarPageState extends State<CriarPage> {
                                     modalidade,
                                   ),
                                   size: 20,
-                                  color: Colors.teal,
+                                  color: const Color(0xFF6366F1),
                                 ),
                                 const SizedBox(width: 8),
                                 Text(modalidade),
@@ -376,7 +376,7 @@ class _CriarPageState extends State<CriarPage> {
                   const Spacer(),
                   Switch(
                     value: _salarioACombinar,
-                    activeColor: Colors.teal,
+                    activeColor: const Color(0xFF6366F1),
                     onChanged: (value) {
                       setState(() {
                         _salarioACombinar = value;
@@ -414,7 +414,10 @@ class _CriarPageState extends State<CriarPage> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.attach_money, color: Colors.teal),
+                            Icon(
+                              Icons.attach_money,
+                              color: const Color(0xFF6366F1),
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'R\$',
@@ -506,7 +509,7 @@ class _CriarPageState extends State<CriarPage> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.phone, color: Colors.teal),
+                          Icon(Icons.phone, color: const Color(0xFF6366F1)),
                           SizedBox(width: 4),
                           Text(
                             '+55',
@@ -673,14 +676,14 @@ class _CriarPageState extends State<CriarPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: Colors.teal),
+                        side: const BorderSide(color: Color(0xFF6366F1)),
                       ),
                       child: const Text(
                         'Limpar',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.teal,
+                          color: const Color(0xFF6366F1),
                         ),
                       ),
                     ),
@@ -691,7 +694,7 @@ class _CriarPageState extends State<CriarPage> {
                     child: Obx(
                       () => ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
+                          backgroundColor: const Color(0xFF6366F1),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -739,7 +742,9 @@ class _CriarPageState extends State<CriarPage> {
                                         content: Text(
                                           'Trampo criado com sucesso!',
                                         ),
-                                        backgroundColor: Colors.green,
+                                        backgroundColor: const Color(
+                                          0xFF6366F1,
+                                        ),
                                         duration: Duration(seconds: 2),
                                       ),
                                     );

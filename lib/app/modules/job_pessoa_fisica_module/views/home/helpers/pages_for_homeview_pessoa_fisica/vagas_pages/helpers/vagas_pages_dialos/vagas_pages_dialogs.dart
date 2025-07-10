@@ -34,14 +34,14 @@ class VagasPagesDialogs {
       switch (status?.toLowerCase()) {
         case 'disponivel':
         case 'disponível':
-          return Colors.green;
+          return const Color(0xFF6366F1);
         case 'ocupado':
           return Colors.orange;
         case 'finalizado':
         case 'encerrado':
           return Colors.grey;
         default:
-          return Colors.green;
+          return const Color(0xFF6366F1);
       }
     }
 
@@ -261,7 +261,7 @@ class VagasPagesDialogs {
         normalizado.contains('disponível')) {
       return Colors.orange;
     } else {
-      return Colors.green;
+      return const Color(0xFF6366F1);
     }
   }
 }

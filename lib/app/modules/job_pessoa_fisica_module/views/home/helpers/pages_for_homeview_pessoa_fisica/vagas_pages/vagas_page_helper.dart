@@ -42,13 +42,13 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     switch (status?.toLowerCase()) {
       case 'disponivel':
       case 'disponível':
-        return Colors.green;
+        return const Color(0xFF6366F1);
       case 'ocupado':
         return Colors.orange;
       case 'finalizado':
         return Colors.grey;
       default:
-        return Colors.green;
+        return const Color(0xFF6366F1);
     }
   }
 

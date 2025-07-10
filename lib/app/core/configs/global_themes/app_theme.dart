@@ -55,7 +55,7 @@ class AppTheme {
       ),
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFF6366F1),
         foregroundColor: Colors.white,
         elevation: 2,
         centerTitle: true,
