@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
@@ -310,64 +312,104 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
               const SizedBox(height: 10),
               StatusVagaWidget(status: data['status'] ?? 'Disponível'),
               const SizedBox(height: 16),
+              // Botões de ação
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      if (data['telefone'] != null &&
-                          data['telefone'].toString().isNotEmpty)
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                final vagaEntity =
-                                    CreateTramposModel.fromJson({
-                                      'id': docId,
-                                      ...data,
-                                    }).toEntity();
-
-                                _controller.salvarVagaFavoritos(vagaEntity);
-                              },
-                              icon: Icon(
-                                Icons.bookmark_border,
-                                color: const Color(0xFF6366F1),
-                                size: 24,
-                              ),
-                              tooltip: 'Salvar vaga',
-                            ),
-                            Text(
-                              'Salvar Vaga',
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(179),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                      IconButton(
+                        onPressed: () {
+                          final vagaEntity =
+                              CreateTramposModel.fromJson({
+                                'id': docId,
+                                ...data,
+                              }).toEntity();
+                          _controller.salvarVagaFavoritos(vagaEntity);
+                        },
+                        icon: Icon(
+                          Icons.bookmark_border,
+                          color: const Color(0xFF6366F1),
+                          size: 24,
                         ),
+                        tooltip: 'Salvar vaga',
+                      ),
+                      const Text(
+                        'Salvar',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
                     ],
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Get.snackbar(
-                        'Interesse',
-                        'Funcionalidade de candidatura será implementada',
-                        backgroundColor: Colors.orange,
-                        colorText: Colors.white,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Tenho Interesse'),
+                  // Botões de contato direto
+                  Row(
+                    children: [
+                      if (data['telefone'] != null &&
+                          data['telefone'].toString().isNotEmpty) ...[
+                        IconButton(
+                          onPressed: () {
+                            final telefone = data['telefone'].toString();
+                            final numeroLimpo = telefone.replaceAll(
+                              RegExp(r'[^0-9]'),
+                              '',
+                            );
+                            String numeroFormatado = numeroLimpo;
+                            if (!numeroFormatado.startsWith('55')) {
+                              numeroFormatado = '55$numeroFormatado';
+                            }
+                            final mensagem =
+                                'Olá! Vi sua vaga "${data['tipoVaga']}" no Trampos BR e tenho interesse.';
+                            final whatsappUri =
+                                'https://wa.me/$numeroFormatado?text=${Uri.encodeComponent(mensagem)}';
+                            launchUrl(
+                              Uri.parse(whatsappUri),
+                              mode: LaunchMode.externalApplication,
+                            );
+                          },
+                          icon: FaIcon(
+                            FontAwesomeIcons.whatsapp,
+                            color: const Color(0xFF25D366),
+                            size: 20,
+                          ),
+                          tooltip: 'WhatsApp',
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            final telefone = data['telefone'].toString();
+                            launchUrl(Uri(scheme: 'tel', path: telefone));
+                          },
+                          icon: Icon(
+                            Icons.phone,
+                            color: const Color(0xFF22C55E),
+                            size: 20,
+                          ),
+                          tooltip: 'Ligar',
+                        ),
+                      ],
+                      if (data['email'] != null &&
+                          data['email'].toString().isNotEmpty)
+                        IconButton(
+                          onPressed: () {
+                            final email = data['email'].toString();
+                            final assunto = Uri.encodeComponent(
+                              'Interesse na vaga: ${data['tipoVaga']}',
+                            );
+                            final corpo = Uri.encodeComponent(
+                              'Olá,\n\nVi sua vaga "${data['tipoVaga']}" no Trampos BR e tenho interesse.\n\nAguardo contato.',
+                            );
+                            launchUrl(
+                              Uri.parse(
+                                'mailto:$email?subject=$assunto&body=$corpo',
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.email,
+                            color: const Color(0xFF6366F1),
+                            size: 20,
+                          ),
+                          tooltip: 'Email',
+                        ),
+                    ],
                   ),
                 ],
               ),

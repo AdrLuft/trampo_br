@@ -81,79 +81,53 @@ class DetalheVagaPageHelpers {
     );
   }
 
-  static Widget buildTipItem(String tip) {
+  static Widget buildTipItem(String tip, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(tip, style: const TextStyle(fontSize: 14)),
-    );
-  }
-
-  static Widget buildTipsCard(bool isDark) {
-    return Card(
-      color: isDark ? Colors.grey.shade800 : Colors.white,
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.checklist, color: const Color(0xFF6366F1), size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Dicas para Candidatura',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            buildTipItem('📋 Leia toda a descrição da vaga'),
-            buildTipItem('📞 Entre em contato pelo telefone ou WhatsApp'),
-            buildTipItem('💬 Seja claro sobre sua experiência'),
-            buildTipItem('🕐 Respeite os horários de contato'),
-          ],
+      child: Text(
+        tip,
+        style: TextStyle(
+          fontSize: 14,
+          color: isDark ? Colors.white70 : Colors.grey.shade700,
         ),
       ),
     );
   }
 
-  // Novo método para criar a seção de contatos com telefone e email
-  static Widget buildContatoSection(
-    String telefone,
-    String email,
-    bool isDark,
-  ) {
+  static Widget buildTipsCard(bool isDark) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.white,
+        color: isDark ? Colors.white.withAlpha(15) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(21),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border:
+            isDark
+                ? Border.all(color: Colors.white.withAlpha(38), width: 1.5)
+                : null,
+        boxShadow:
+            isDark
+                ? null
+                : [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(21),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.contact_phone,
-                size: 20,
-                color: const Color(0xFF6366F1),
-              ),
+              Icon(Icons.checklist, color: const Color(0xFF6366F1), size: 24),
               const SizedBox(width: 8),
               Text(
-                'Informações de Contato',
+                'Dicas para Candidatura',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
@@ -161,44 +135,16 @@ class DetalheVagaPageHelpers {
             ],
           ),
           const SizedBox(height: 12),
-          if (telefone.isNotEmpty) ...[
-            Row(
-              children: [
-                Icon(Icons.phone, size: 16, color: const Color(0xFF6366F1)),
-                const SizedBox(width: 8),
-                Text(
-                  'Telefone: $telefone',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white70 : Colors.grey.shade700,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (email.isNotEmpty) ...[
-            Row(
-              children: [
-                Icon(Icons.email, size: 16, color: const Color(0xFF6366F1)),
-                const SizedBox(width: 8),
-                Text(
-                  'Email: $email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white70 : Colors.grey.shade700,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          buildTipItem('📋 Leia toda a descrição da vaga', isDark),
+          buildTipItem('📞 Entre em contato pelo telefone ou WhatsApp', isDark),
+          buildTipItem('💬 Seja claro sobre sua experiência', isDark),
+          buildTipItem('🕐 Respeite os horários de contato', isDark),
         ],
       ),
     );
   }
 
+  // Novo método para criar a linha de informação
   static Widget buildInfoRow(
     String label,
     String value,

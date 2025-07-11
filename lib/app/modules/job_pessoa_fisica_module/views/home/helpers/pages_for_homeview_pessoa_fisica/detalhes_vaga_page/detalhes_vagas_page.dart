@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhe_vaga_page_helpers.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DetalhesVagaPage extends StatefulWidget {
   final Map<String, dynamic> vagaData;
@@ -20,239 +22,6 @@ class DetalhesVagaPage extends StatefulWidget {
 }
 
 class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
-  void _mostrarOpcoesContato() {
-    final telefone = widget.vagaData['telefone']?.toString() ?? '';
-    final email = widget.vagaData['email']?.toString() ?? '';
-
-    // Verifica se existe pelo menos um meio de contato
-    if (telefone.isEmpty && (email.isEmpty)) {
-      Get.snackbar(
-        'Informação',
-        'Não há informações de contato disponíveis para esta vaga.',
-        backgroundColor: const Color(0xFF6366F1),
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Informações de Contato'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (telefone.isNotEmpty) ...[
-                  const Text(
-                    'Telefone:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(telefone),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.phone,
-                              color: Color(0xFF6366F1),
-                              size: 30,
-                            ),
-                            onPressed: () => _fazerLigacao(telefone),
-                            tooltip: 'Ligar',
-                          ),
-                          const Text('Ligar', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.message,
-                              color: Color(0xFF6366F1),
-                              size: 30,
-                            ),
-                            onPressed: () => _enviarWhatsApp(telefone),
-                            tooltip: 'WhatsApp',
-                          ),
-                          const Text(
-                            'WhatsApp',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.copy,
-                              color: Color(0xFF6366F1),
-                              size: 30,
-                            ),
-                            onPressed:
-                                () =>
-                                    _copiarTexto(telefone, 'Telefone copiado'),
-                            tooltip: 'Copiar',
-                          ),
-                          const Text('Copiar', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-
-                if (telefone.isNotEmpty && email.isNotEmpty)
-                  const Divider(height: 32),
-
-                if (email.isNotEmpty) ...[
-                  const Text(
-                    'Email:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(email),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.email,
-                              color: Color(0xFF6366F1),
-                              size: 30,
-                            ),
-                            onPressed: () => _enviarEmail(email),
-                            tooltip: 'Enviar Email',
-                          ),
-                          const Text('Email', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.copy,
-                              color: Color(0xFF6366F1),
-                              size: 30,
-                            ),
-                            onPressed:
-                                () => _copiarTexto(email, 'Email copiado'),
-                            tooltip: 'Copiar',
-                          ),
-                          const Text('Copiar', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Fechar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Função para fazer ligação - melhorada com tratamento de erros
-  void _fazerLigacao(String telefone) async {
-    final Uri telUri = Uri(scheme: 'tel', path: telefone);
-    try {
-      if (await canLaunchUrl(telUri)) {
-        await launchUrl(telUri);
-      } else {
-        _copiarTexto(
-          telefone,
-          'Não foi possível abrir o telefone. Número copiado.',
-        );
-      }
-    } catch (e) {
-      _copiarTexto(telefone, 'Erro ao tentar ligar. Número copiado.');
-      debugPrint('Erro ao tentar fazer ligação: $e');
-    }
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop(); // Fecha o diálogo após a ação
-  }
-
-  // Função para enviar WhatsApp - melhorada
-  void _enviarWhatsApp(String telefone) async {
-    final numeroLimpo = telefone.replaceAll(RegExp(r'[^0-9]'), '');
-    String numeroFormatado = numeroLimpo;
-
-    // Adiciona o código do país se não estiver presente (assume Brasil)
-    if (!numeroFormatado.startsWith('55')) {
-      numeroFormatado = '55$numeroFormatado';
-    }
-
-    final mensagem =
-        'Olá! Vi sua vaga "${widget.vagaData['tipoVaga']}" no Trampos BR e tenho interesse.';
-    final Uri whatsappUri = Uri.parse(
-      'https://wa.me/$numeroFormatado?text=${Uri.encodeComponent(mensagem)}',
-    );
-
-    try {
-      if (await canLaunchUrl(whatsappUri)) {
-        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
-        // ignore: use_build_context_synchronously
-        Navigator.of(context).pop(); // Fecha o diálogo após abrir o WhatsApp
-      } else {
-        // Se não conseguir abrir o WhatsApp, exibe mensagem e copia o número
-        _copiarTexto(
-          telefone,
-          'Não foi possível abrir o WhatsApp. Número copiado.',
-        );
-        // ignore: use_build_context_synchronously
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      _copiarTexto(telefone, 'Erro ao tentar abrir WhatsApp. Número copiado.');
-      debugPrint('Erro ao tentar abrir WhatsApp: $e');
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-    }
-  }
-
-  // Função para enviar email - melhorada
-  void _enviarEmail(String email) async {
-    final assunto = Uri.encodeComponent(
-      'Interesse na vaga: ${widget.vagaData['tipoVaga']}',
-    );
-    final corpo = Uri.encodeComponent(
-      'Olá,\n\nVi sua vaga "${widget.vagaData['tipoVaga']}" no Trampos BR e tenho interesse.\n\nAguardo contato.',
-    );
-
-    final Uri mailtoUri = Uri.parse(
-      'mailto:$email?subject=$assunto&body=$corpo',
-    );
-
-    try {
-      if (await canLaunchUrl(mailtoUri)) {
-        await launchUrl(mailtoUri);
-      } else {
-        _copiarTexto(
-          email,
-          'Não foi possível abrir o email. Endereço copiado.',
-        );
-      }
-    } catch (e) {
-      _copiarTexto(email, 'Erro ao tentar enviar email. Endereço copiado.');
-      debugPrint('Erro ao tentar enviar email: $e');
-    }
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop(); // Fecha o diálogo após a ação
-  }
-
   void _copiarTexto(String texto, String mensagem) {
     Clipboard.setData(ClipboardData(text: texto));
     Get.snackbar(
@@ -264,65 +33,79 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
     );
   }
 
-  void mostrarMensagemWhatsApp(String telefone) {
-    final TextEditingController mensagemController = TextEditingController();
-    mensagemController.text =
-        'Olá! Vi sua vaga "${widget.vagaData['tipoVaga']}" no Trampos BR e tenho interesse.';
+  void _compartilharVaga() async {
+    final String titulo = widget.vagaData['titulo'] as String? ?? '';
+    final String tipoVaga = widget.vagaData['tipoVaga'] as String? ?? 'Vaga';
+    final String descricao = widget.vagaData['descricao'] as String? ?? '';
+    final String modalidade = widget.vagaData['modalidade'] as String? ?? '';
+    final String salario = widget.vagaData['salario'] as String? ?? '';
+    final String telefone = widget.vagaData['telefone']?.toString() ?? '';
+    final String email = widget.vagaData['email']?.toString() ?? '';
+    final String nomeEmpresa =
+        widget.vagaData['createTrampoNome'] as String? ?? '';
 
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Mensagem para WhatsApp'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Telefone: $telefone'),
-            const SizedBox(height: 10),
-            TextField(
-              controller: mensagemController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Sua mensagem',
-                border: OutlineInputBorder(),
-              ),
+    String textoCompartilhamento = '''
+🔥 ${titulo.isNotEmpty ? titulo : tipoVaga} - Trampos BR
+
+👤 Empresa: $nomeEmpresa
+💼 Tipo: $tipoVaga
+${modalidade.isNotEmpty ? '🏢 Modalidade: $modalidade' : ''}
+${salario.isNotEmpty && salario != 'Não informado' ? '💰 Salário: $salario' : ''}
+
+📋 Descrição:
+${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
+
+📞 Contato:''';
+
+    if (telefone.isNotEmpty) {
+      textoCompartilhamento += '\n📱 WhatsApp/Telefone: $telefone';
+    }
+
+    if (email.isNotEmpty) {
+      textoCompartilhamento += '\n📧 Email: $email';
+    }
+
+    if (telefone.isEmpty && email.isEmpty) {
+      textoCompartilhamento += '\n⚠️ Informações de contato não disponíveis';
+    }
+
+    textoCompartilhamento +=
+        '\n\n🚀 Baixe o Trampos BR e encontre mais oportunidades!';
+
+    try {
+      // Tenta usar o share_plus primeiro
+      await Share.share(
+        textoCompartilhamento,
+        subject: titulo.isNotEmpty ? titulo : 'Vaga: $tipoVaga',
+      );
+    } catch (e) {
+      // Se falhar, copia para a área de transferência como fallback
+      _copiarTexto(textoCompartilhamento, 'Vaga copiada para compartilhar!');
+
+      // Mostra um dialog explicativo
+      Get.dialog(
+        AlertDialog(
+          title: const Text('Compartilhar Vaga'),
+          content: const Text(
+            'As informações da vaga foram copiadas para sua área de transferência.\n\n'
+            'Agora você pode colar em qualquer aplicativo de mensagem!',
+          ),
+          actions: [
+            TextButton(onPressed: () => Get.back(), child: const Text('OK')),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                // Tenta abrir WhatsApp Web como alternativa
+                final whatsappWebUri =
+                    'https://wa.me/?text=${Uri.encodeComponent(textoCompartilhamento)}';
+                launchUrl(Uri.parse(whatsappWebUri));
+              },
+              child: const Text('WhatsApp Web'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final mensagem = mensagemController.text;
-              final numeroLimpo = telefone.replaceAll(RegExp(r'[^0-9]'), '');
-              final textoCompleto =
-                  'WhatsApp: $numeroLimpo\nMensagem: $mensagem';
-
-              _copiarTexto(
-                textoCompleto,
-                'Informações copiadas! Cole no WhatsApp',
-              );
-              Get.back();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-            ),
-            child: const Text('Copiar Info'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _candidatarVaga() {
-    Get.snackbar(
-      'Candidatura',
-      'Funcionalidade em desenvolvimento',
-      backgroundColor: const Color(0xFF6366F1),
-      colorText: Colors.white,
-      duration: const Duration(seconds: 2),
-    );
+      );
+    }
   }
 
   String _formatarData(dynamic createDate) {
@@ -377,16 +160,8 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () {
-              final texto = '''
-${titulo.isNotEmpty ? titulo : widget.vagaData['tipoVaga'] ?? 'Vaga'}
-
-${widget.vagaData['descricao'] ?? 'Sem descrição'}
-
-Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
-              ''';
-              _copiarTexto(texto, 'Informações da vaga copiadas');
-            },
+            onPressed: _compartilharVaga,
+            tooltip: 'Compartilhar vaga',
           ),
         ],
       ),
@@ -400,15 +175,25 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade800 : Colors.white,
+                color: isDark ? Colors.white.withAlpha(15) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(21),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                border:
+                    isDark
+                        ? Border.all(
+                          color: Colors.white.withAlpha(38),
+                          width: 1.5,
+                        )
+                        : null,
+                boxShadow:
+                    isDark
+                        ? null
+                        : [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(21),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,51 +315,355 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
                 Icons.card_giftcard,
               ),
 
-            // Contato
-            if (telefone.isNotEmpty || email.isNotEmpty)
-              DetalheVagaPageHelpers.buildContatoSection(
-                telefone,
-                email,
-                isDark,
-              ),
-
-            const SizedBox(height: 20),
-
             // Dicas para candidatura
             DetalheVagaPageHelpers.buildTipsCard(isDark),
 
-            const SizedBox(height: 30),
+            // Botões de contato direto
+            const SizedBox(height: 20),
+            if (telefone.isNotEmpty || email.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withAlpha(15) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      isDark
+                          ? Border.all(
+                            color: Colors.white.withAlpha(38),
+                            width: 1.5,
+                          )
+                          : null,
+                  boxShadow:
+                      isDark
+                          ? null
+                          : [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(21),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.contact_phone,
+                          size: 20,
+                          color: const Color(0xFF6366F1),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Entre em Contato',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (telefone.isNotEmpty) ...[
+                          Column(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  final numeroLimpo = telefone.replaceAll(
+                                    RegExp(r'[^0-9]'),
+                                    '',
+                                  );
+                                  String numeroFormatado = numeroLimpo;
+                                  if (!numeroFormatado.startsWith('55')) {
+                                    numeroFormatado = '55$numeroFormatado';
+                                  }
+                                  final mensagem =
+                                      'Olá! Vi sua vaga "${widget.vagaData['tipoVaga']}" no Trampos BR e tenho interesse.';
+                                  final whatsappUri =
+                                      'https://wa.me/$numeroFormatado?text=${Uri.encodeComponent(mensagem)}';
+                                  launchUrl(
+                                    Uri.parse(whatsappUri),
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                },
+                                icon: FaIcon(
+                                  FontAwesomeIcons.whatsapp,
+                                  color: const Color(0xFF25D366),
+                                  size: 28,
+                                ),
+                                tooltip: 'WhatsApp',
+                              ),
+                              Text(
+                                'WhatsApp',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      isDark
+                                          ? Colors.white70
+                                          : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  launchUrl(Uri(scheme: 'tel', path: telefone));
+                                },
+                                icon: Icon(
+                                  Icons.phone,
+                                  color: const Color(0xFF22C55E),
+                                  size: 28,
+                                ),
+                                tooltip: 'Ligar',
+                              ),
+                              Text(
+                                'Ligar',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      isDark
+                                          ? Colors.white70
+                                          : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (email.isNotEmpty)
+                          Column(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  final assunto = Uri.encodeComponent(
+                                    'Interesse na vaga: ${widget.vagaData['tipoVaga']}',
+                                  );
+                                  final corpo = Uri.encodeComponent(
+                                    'Olá,\n\nVi sua vaga "${widget.vagaData['tipoVaga']}" no Trampos BR e tenho interesse.\n\nAguardo contato.',
+                                  );
+                                  launchUrl(
+                                    Uri.parse(
+                                      'mailto:$email?subject=$assunto&body=$corpo',
+                                    ),
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.email,
+                                  color: const Color(0xFF6366F1),
+                                  size: 28,
+                                ),
+                                tooltip: 'Email',
+                              ),
+                              Text(
+                                'Email',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      isDark
+                                          ? Colors.white70
+                                          : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        // Botão de compartilhamento adicional
+                        Column(
+                          children: [
+                            IconButton(
+                              onPressed: _compartilharVaga,
+                              icon: Icon(
+                                Icons.share,
+                                color: const Color(0xFF6366F1),
+                                size: 28,
+                              ),
+                              tooltip: 'Compartilhar',
+                            ),
+                            Text(
+                              'Compartilhar',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    isDark
+                                        ? Colors.white70
+                                        : Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    if (telefone.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color:
+                              isDark
+                                  ? Colors.blue.shade900.withAlpha(77)
+                                  : Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color:
+                                isDark
+                                    ? Colors.blue.shade600.withAlpha(128)
+                                    : Colors.blue.shade200,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.phone,
+                              color:
+                                  isDark
+                                      ? Colors.blue.shade300
+                                      : Colors.blue.shade600,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                telefone,
+                                style: TextStyle(
+                                  color:
+                                      isDark
+                                          ? Colors.blue.shade200
+                                          : Colors.blue.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed:
+                                  () => _copiarTexto(
+                                    telefone,
+                                    'Telefone copiado',
+                                  ),
+                              icon: Icon(
+                                Icons.copy,
+                                color:
+                                    isDark
+                                        ? Colors.blue.shade300
+                                        : Colors.blue.shade600,
+                                size: 16,
+                              ),
+                              tooltip: 'Copiar número',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (email.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color:
+                              isDark
+                                  ? Colors.purple.shade900.withAlpha(77)
+                                  : Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color:
+                                isDark
+                                    ? Colors.purple.shade600.withAlpha(128)
+                                    : Colors.purple.shade200,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.email,
+                              color:
+                                  isDark
+                                      ? Colors.purple.shade300
+                                      : Colors.purple.shade600,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                email,
+                                style: TextStyle(
+                                  color:
+                                      isDark
+                                          ? Colors.purple.shade200
+                                          : Colors.purple.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed:
+                                  () => _copiarTexto(email, 'Email copiado'),
+                              icon: Icon(
+                                Icons.copy,
+                                color:
+                                    isDark
+                                        ? Colors.purple.shade300
+                                        : Colors.purple.shade600,
+                                size: 16,
+                              ),
+                              tooltip: 'Copiar email',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ] else
+              // Caso não tenha contato disponível
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color:
+                      isDark
+                          ? Colors.orange.shade900.withAlpha(77)
+                          : Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        isDark
+                            ? Colors.orange.shade600.withAlpha(128)
+                            : Colors.orange.shade300,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color:
+                          isDark
+                              ? Colors.orange.shade300
+                              : Colors.orange.shade700,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Informações de contato não disponíveis para esta vaga.',
+                        style: TextStyle(
+                          color:
+                              isDark
+                                  ? Colors.orange.shade200
+                                  : Colors.orange.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-            // Botões de ação
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _mostrarOpcoesContato,
-                    icon: const Icon(Icons.phone),
-                    label: const Text('Contatar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _candidatarVaga,
-                    icon: const Icon(Icons.work),
-                    label: const Text('Candidatar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Espaçamento extra no final
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -607,15 +696,22 @@ Contato: ${widget.vagaData['telefone'] ?? 'Não informado'}
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.white,
+        color: isDark ? Colors.white.withAlpha(15) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(21),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border:
+            isDark
+                ? Border.all(color: Colors.white.withAlpha(38), width: 1.5)
+                : null,
+        boxShadow:
+            isDark
+                ? null
+                : [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(21),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
