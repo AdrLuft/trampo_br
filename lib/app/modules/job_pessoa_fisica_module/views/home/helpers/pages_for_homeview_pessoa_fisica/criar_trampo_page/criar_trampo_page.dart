@@ -189,7 +189,7 @@ class _CriarPageState extends State<CriarPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).colorScheme.primary.withAlpha(204),
+                      Theme.of(context).colorScheme.primary.withAlpha(50),
                       Theme.of(context).colorScheme.primary,
                     ],
                     begin: Alignment.topLeft,
@@ -215,7 +215,7 @@ class _CriarPageState extends State<CriarPage> {
                     Text(
                       'Criar Novo Trampo',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
@@ -224,10 +224,10 @@ class _CriarPageState extends State<CriarPage> {
                     Text(
                       'Preencha os dados abaixo',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onPrimary.withAlpha(179),
+                        ).colorScheme.onPrimary.withAlpha(190),
                       ),
                     ),
                   ],

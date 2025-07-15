@@ -111,19 +111,65 @@ ${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
   String _formatarData(dynamic createDate) {
     try {
       DateTime data;
-      if (createDate is String) {
-        data = DateTime.parse(createDate);
+
+      if (createDate == null) {
+        return 'Data não disponível';
+      }
+
+      // Se for um Timestamp do Firebase
+      if (createDate.runtimeType.toString().contains('Timestamp')) {
+        data = createDate.toDate();
+      }
+      // Se for uma String
+      else if (createDate is String) {
+        // Tenta diferentes formatos de string
+        try {
+          data = DateTime.parse(createDate);
+        } catch (e) {
+          // Se falhar, tenta outros formatos comuns
+          try {
+            data = DateTime.tryParse(createDate) ?? DateTime.now();
+          } catch (e2) {
+            return 'Data não disponível';
+          }
+        }
+      }
+      // Se for um int (timestamp em milliseconds)
+      else if (createDate is int) {
+        data = DateTime.fromMillisecondsSinceEpoch(createDate);
+      }
+      // Se for um Map (possível estrutura do Firebase)
+      else if (createDate is Map) {
+        if (createDate.containsKey('seconds')) {
+          data = DateTime.fromMillisecondsSinceEpoch(
+            createDate['seconds'] * 1000 +
+                (createDate['nanoseconds'] ?? 0) ~/ 1000000,
+          );
+        } else {
+          return 'Data não disponível';
+        }
+      }
+      // Se já for DateTime
+      else if (createDate is DateTime) {
+        data = createDate;
       } else {
-        data = DateTime.now();
+        return 'Data não disponível';
       }
 
       final agora = DateTime.now();
-      final diferenca = agora.difference(data);
+      agora.difference(data);
 
-      if (diferenca.inDays == 0) return 'Hoje';
-      if (diferenca.inDays == 1) return 'Ontem';
-      if (diferenca.inDays < 7) return '${diferenca.inDays} dias atrás';
-      return '${data.day}/${data.month}/${data.year}';
+      // Ajustar para timezone local se necessário
+      final dataLocal = data.toLocal();
+      final agoraLocal = agora.toLocal();
+      final diferencaLocal = agoraLocal.difference(dataLocal);
+
+      if (diferencaLocal.inDays == 0) return 'Hoje';
+      if (diferencaLocal.inDays == 1) return 'Ontem';
+      if (diferencaLocal.inDays < 7) {
+        return '${diferencaLocal.inDays} dias atrás';
+      }
+      return '${dataLocal.day.toString().padLeft(2, '0')}/${dataLocal.month.toString().padLeft(2, '0')}/${dataLocal.year}';
     } catch (e) {
       return 'Data não disponível';
     }

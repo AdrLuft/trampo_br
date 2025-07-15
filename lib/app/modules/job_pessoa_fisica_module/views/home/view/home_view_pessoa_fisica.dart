@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
@@ -9,7 +10,6 @@ import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/h
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_page.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhes_vagas_page.dart'
     as detalhes;
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/mensagens_page/mensagens_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/trampos_salvos_page/salvos_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_page_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,10 +23,10 @@ class HomeViewPessoaFisica extends StatefulWidget {
 
 class _HomeViewState extends State<HomeViewPessoaFisica> {
   int _selectedIndex = 0;
-  final TramposController _controller = Get.find();
   final SettingsHomePagePessoaFisicaController _settingsController =
       SettingsHomePagePessoaFisicaController();
-  // final DialogsHomeViewPessoaFisica _dialogsHelper = DialogsHomeViewPessoaFisica();
+  final TramposController _controller = Get.find<TramposController>();
+
   @override
   void initState() {
     super.initState();
@@ -44,34 +44,16 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
     const VagasPage(),
     const SalvosPage(),
     const CriarPage(),
-    const MensagensPage(),
+    // const MensagensPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Trampos BR',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+        title: const Text('Trampos BR'),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
         ],
       ),
       drawer: _buildDrawer(),
@@ -99,10 +81,10 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Vagas'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Salvos'),
           BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Criar'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Mensagens',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.message),
+          //   label: 'Mensagens',
+          // ),
         ],
       ),
     );
@@ -453,7 +435,12 @@ class _InicioPage extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final doc = snapshot.data!.docs[index];
                   final data = doc.data() as Map<String, dynamic>;
-                  return _buildTrampoCardFromData(data, isDark);
+                  return _buildTrampoCardFromData(
+                    data,
+                    isDark,
+                    doc.id,
+                    controller,
+                  );
                 },
               );
             },
@@ -463,7 +450,12 @@ class _InicioPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTrampoCardFromData(Map<String, dynamic> data, bool isDark) {
+  Widget _buildTrampoCardFromData(
+    Map<String, dynamic> data,
+    bool isDark,
+    String docId,
+    TramposController controller,
+  ) {
     return Builder(
       builder: (context) {
         return GestureDetector(
@@ -555,7 +547,12 @@ class _InicioPage extends StatelessWidget {
                         children: [
                           IconButton(
                             onPressed: () {
-                              // Implementação do método de salvar vaga
+                              final vagaEntity =
+                                  CreateTramposModel.fromJson({
+                                    'id': docId,
+                                    ...data,
+                                  }).toEntity();
+                              controller.salvarVagaFavoritos(vagaEntity);
                             },
                             icon: Icon(
                               Icons.bookmark_border,
