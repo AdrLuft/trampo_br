@@ -20,6 +20,7 @@ class MessageUtils {
   }
 
   //Para avisos
+  //Para avisos
   static void showDialogMessage(
     String title,
     String message, {
@@ -31,15 +32,54 @@ class MessageUtils {
           children: [
             if (isWarning) const Icon(Icons.warning, color: Colors.amber),
             if (isWarning) const SizedBox(width: 8),
-            Text(title),
+            Flexible(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Get.isDarkMode ? Colors.white : Colors.black87,
+                  fontSize: 18,
+                ),
+              ),
+            ),
           ],
         ),
-        content: Text(message),
-        backgroundColor: isWarning ? Colors.amber[50] : null,
+        content: Text(
+          message,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Get.isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 16,
+          ),
+        ),
+        backgroundColor:
+            isWarning
+                ? (Get.isDarkMode ? Colors.grey[800] : Colors.amber[50])
+                : (Get.isDarkMode ? Colors.grey[850] : Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side:
+              isWarning
+                  ? BorderSide(color: Colors.amber.withAlpha(03), width: 1)
+                  : BorderSide.none,
+        ),
+        elevation: 8,
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('OK')),
+          TextButton(
+            onPressed: () => Get.back(),
+            style: TextButton.styleFrom(
+              foregroundColor:
+                  isWarning ? Colors.amber[700] : Get.theme.primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            child: const Text(
+              'OK',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
         ],
       ),
+      barrierDismissible: true,
     );
   }
 

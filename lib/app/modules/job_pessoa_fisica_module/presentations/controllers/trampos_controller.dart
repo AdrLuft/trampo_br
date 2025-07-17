@@ -124,20 +124,25 @@ class TramposController extends GetxController {
 
   Future<void> salvarVagaFavoritos(TramposEntiti trampo) async {
     final userId = auth.currentUser?.uid;
+    if (userId == null) return;
 
     try {
-      final jaExiste = vagasSalvas.any((vaga) => vaga['id'] == trampo.id);
+      await carregarMinhasVagas();
 
+      final jaExiste = vagasSalvas.any((vaga) {
+        final vagaId = vaga['id']?.toString() ?? '';
+        final trampoId = trampo.id.toString();
+        return vagaId == trampoId && vagaId.isNotEmpty;
+      });
       if (jaExiste) {
-        MessageUtils.showDialogMessage('Atenção', 'Você já salvou essa vaga.');
-        Get.back();
+        MessageUtils.showDialogMessage(
+          'Aviso',
+          'Você já salvou essa vaga.',
+          isWarning: true,
+        );
         return;
       }
-
-      // Salva no Firebase
-      await _repository.salvarVagaFavoritos(userId!, trampo.id);
-
-      // Recarrega a lista de vagas salvas do Firebase
+      await _repository.salvarVagaFavoritos(userId, trampo.id);
       await carregarVagasSalvas();
 
       MessageUtils.showSucessSnackbar('Sucesso', 'Vaga Salva!');

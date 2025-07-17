@@ -213,7 +213,7 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
       title: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.email, color: const Color(0xFF6366F1), size: 28),
+          Icon(Icons.email, color: Color(0xFF6366F1), size: 28),
           SizedBox(width: 8),
           Expanded(
             child: Text(
