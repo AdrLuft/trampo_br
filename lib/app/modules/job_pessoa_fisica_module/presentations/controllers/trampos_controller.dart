@@ -20,7 +20,11 @@ class TramposController extends GetxController {
   GlobalThemeController get themeController =>
       Get.find<GlobalThemeController>();
 
-  TramposController(this._listarTramposUsecases, this._repository);
+  TramposController(
+    this._listarTramposUsecases,
+    this._repository,
+    //Function({String? tag}) param2,
+  );
 
   @override
   void onInit() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/profile_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
@@ -26,6 +27,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
   final SettingsHomePagePessoaFisicaController _settingsController =
       SettingsHomePagePessoaFisicaController();
   final TramposController _controller = Get.find<TramposController>();
+  final usercontroller = Get.find<ProfileController>();
 
   @override
   void initState() {
@@ -96,9 +98,10 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
+          // Header com altura dinâmica
           Container(
-            height: 220,
             width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 200, maxHeight: 280),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -109,50 +112,116 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                 end: Alignment.bottomRight,
               ),
             ),
-            child: DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.transparent),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 120,
-                    height: 75,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.9),
-                          blurRadius: 70,
-                          offset: const Offset(0, 5),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Obx(() {
+                  // Pega a instância do controller
+                  final controller = Get.find<ProfileController>();
+
+                  // Enquanto estiver carregando, mostra um spinner
+                  if (controller.isLoading.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
+                  }
+
+                  // Se carregou com sucesso, exibe a UI completa
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Avatar/Ícone
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          borderRadius: BorderRadius.circular(40),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          size: 35,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Nome e email com layout responsivo
+                      if (controller.user.value != null) ...[
+                        // NOME DO USUÁRIO
+                        Flexible(
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0,
+                            ),
+                            child: Text(
+                              controller.user.value!.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        // EMAIL DO USUÁRIO
+                        Flexible(
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0,
+                            ),
+                            child: Text(
+                              controller.user.value!.email,
+                              style: TextStyle(
+                                color: Colors.white.withAlpha(200),
+                                fontSize: 11,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        // MENSAGEM DE ERRO/FALHA
+                        Flexible(
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0,
+                            ),
+                            child: Text(
+                              controller.errorMessage.value.isNotEmpty
+                                  ? 'Erro ao carregar'
+                                  : 'Usuário não encontrado',
+                              style: TextStyle(
+                                color: Colors.red[300],
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
                       ],
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Trampos BR',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Menu Principal',
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onPrimary.withAlpha(179),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                }),
               ),
             ),
           ),

@@ -132,7 +132,7 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
   void initState() {
     super.initState();
     _emailController = TextEditingController();
-    _loginController = Get.find<LoginController>();
+    _loginController = Get.put(LoginController(Get.find()));
   }
 
   @override
