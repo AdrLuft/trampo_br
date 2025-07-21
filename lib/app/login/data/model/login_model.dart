@@ -3,12 +3,14 @@ class UserModel {
   final String password;
   final String? name;
   final String termosDeUso;
+  final String? phone;
 
   UserModel({
     required this.email,
     required this.password,
     this.name,
     required this.termosDeUso,
+    this.phone,
   });
 
   Map<String, dynamic> toJson() {
@@ -17,6 +19,7 @@ class UserModel {
       'password': password,
       'name': name,
       'termosDeUso': termosDeUso,
+      'phone': phone,
     };
   }
 
@@ -26,6 +29,7 @@ class UserModel {
       password: json['password'] as String,
       name: json['name'] as String,
       termosDeUso: json['termosDeUso'] as String,
+      phone: json['phone'] as String?,
     );
   }
 }

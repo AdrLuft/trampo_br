@@ -24,6 +24,8 @@ class UserRepositoryImp implements UserRepositoryAbstract {
         uid: firebaseUser.uid,
         name: firebaseUser.displayName!,
         email: firebaseUser.email ?? '',
+        phone: firebaseUser.phoneNumber,
+        address: null,
       );
     }
 
@@ -37,6 +39,8 @@ class UserRepositoryImp implements UserRepositoryAbstract {
         uid: firebaseUser.uid,
         name: data['name'] ?? 'Usuário',
         email: data['email'] ?? firebaseUser.email ?? '',
+        phone: data['phone'] ?? firebaseUser.phoneNumber,
+        address: data['address'],
       );
     }
 

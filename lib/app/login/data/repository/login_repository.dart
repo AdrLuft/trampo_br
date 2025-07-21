@@ -20,6 +20,7 @@ class LoginRepository {
     required String document,
     required String address,
     required String aceitarTermos,
+    required String? phone,
   }) async {
     UserCredential userCredential = await _firebaseAuth
         .createUserWithEmailAndPassword(email: email, password: password);
@@ -32,6 +33,7 @@ class LoginRepository {
       'address': address,
       'document': document,
       'aceitarTermos': aceitarTermos,
+      'phone': phone,
     });
 
     return userCredential.user!;

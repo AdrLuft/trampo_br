@@ -26,6 +26,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   final _documentController = TextEditingController();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   bool _isLogin = true;
   bool _isLoading = false;
@@ -52,6 +53,8 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     _documentController.dispose();
     _nameController.dispose();
     _addressController.dispose();
+    _phoneController.dispose();
+
     super.dispose();
   }
 
@@ -82,7 +85,12 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_isLogin && !_acceptTerms) {
-      Get.snackbar('Erro', 'Você deve aceitar os termos de uso');
+      Get.snackbar(
+        'Erro',
+        'Você deve aceitar os termos de uso',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
       return;
     }
 
@@ -101,6 +109,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
           name: _nameController.text,
           address: _addressController.text,
           aceitarTermos: _acceptTerms ? 'Sim' : 'Não',
+          phone: _phoneController.text,
         );
         Get.snackbar('Sucesso', 'Cadastro realizado com sucesso!');
         if (mounted) setState(() => _isLogin = true);
@@ -308,6 +317,37 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
               return CPFValidator.isValid(doc) ? null : 'CPF inválido';
             }
             return CNPJValidator.isValid(doc) ? null : 'CNPJ inválido';
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildSimpleTextField(
+          controller: _phoneController,
+          hintText: 'Telefone',
+          keyboardType: TextInputType.phone,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(11),
+          ],
+          validator: (value) {
+            final phone = value ?? '';
+            if (phone.isEmpty) {
+              return 'Digite seu telefone';
+            }
+            if (phone.length < 10) {
+              return 'Telefone deve ter pelo menos 10 dígitos';
+            }
+            if (phone.length == 10) {
+              if (!RegExp(r'^[1-9][1-9]\d{8}$').hasMatch(phone)) {
+                return 'Telefone inválido';
+              }
+            } else if (phone.length == 11) {
+              if (!RegExp(r'^[1-9][1-9][9]\d{8}$').hasMatch(phone)) {
+                return 'Celular inválido';
+              }
+            } else {
+              return 'Telefone deve ter 10 ou 11 dígitos';
+            }
+            return null;
           },
         ),
         const SizedBox(height: 16),

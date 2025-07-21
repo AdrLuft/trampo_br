@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/profile_controller.dart';
 
-class PerfilPage extends StatelessWidget {
+class PerfilPage extends StatefulWidget {
   const PerfilPage({super.key});
+
+  @override
+  State<PerfilPage> createState() => _PerfilPageState();
+}
+
+class _PerfilPageState extends State<PerfilPage> {
+  final controller = Get.find<ProfileController>();
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +47,7 @@ class PerfilPage extends StatelessWidget {
       body: Builder(
         builder: (context) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
+
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -61,7 +70,7 @@ class PerfilPage extends StatelessWidget {
                     color:
                         isDark
                             ? Theme.of(context).colorScheme.onSurface
-                            : Theme.of(context).colorScheme.onBackground,
+                            : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -91,7 +100,10 @@ class PerfilPage extends StatelessWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           title: const Text('Email'),
-                          subtitle: const Text('usuario@trampos.br'),
+                          subtitle:
+                              controller.user.value?.email != null
+                                  ? Text(controller.user.value!.email)
+                                  : const Text('Email não disponível'),
                         ),
                         const Divider(),
                         ListTile(
@@ -100,7 +112,10 @@ class PerfilPage extends StatelessWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           title: const Text('Telefone'),
-                          subtitle: const Text('(11) 99999-9999'),
+                          subtitle:
+                              controller.user.value?.phone != null
+                                  ? Text(controller.user.value!.phone ?? '')
+                                  : const Text('Telefone não disponível'),
                         ),
                         const Divider(),
                         ListTile(
@@ -109,7 +124,10 @@ class PerfilPage extends StatelessWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           title: const Text('Localização'),
-                          subtitle: const Text('São Paulo, SP'),
+                          subtitle:
+                              controller.user.value?.address != null
+                                  ? Text(controller.user.value!.address ?? '')
+                                  : const Text('Endereço não disponível'),
                         ),
                       ],
                     ),
