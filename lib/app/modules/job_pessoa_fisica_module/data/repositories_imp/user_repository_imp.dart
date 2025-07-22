@@ -47,4 +47,18 @@ class UserRepositoryImp implements UserRepositoryAbstract {
     // Se não encontrar em lugar nenhum, lança um erro
     throw Exception('Não foi possível carregar os dados do usuário.');
   }
+
+  @override
+  Future<void> updateUser(UserEntity user) async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      throw Exception('Nenhum usuário autenticado para atualizar.');
+    }
+    await _firestore.collection('users').doc(user.uid).update({
+      'name': user.name,
+      'email': user.email,
+      'phone': user.phone,
+      'address': user.address,
+    });
+  }
 }

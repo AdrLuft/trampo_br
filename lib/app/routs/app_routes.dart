@@ -2,9 +2,10 @@ import 'package:get/get.dart';
 import 'package:interprise_calendar/app/login/bindings/login_bindings.dart';
 import 'package:interprise_calendar/app/login/views/login_view.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/bindings/trampos_bindings.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/perfi_page/editar_perfil_page.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/view/home_view_pessoa_fisica.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/mensagens_page/mensagens_page_helper.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/perfi_page/perfil_page_helper.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/perfi_page/perfil_page.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/trampos_salvos_page/salvos_page_helper.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_page_helper.dart';
 
@@ -16,6 +17,7 @@ class AppRoutes {
   static const String mensagens = '/mensagens';
   static const String tramposSalvos = '/trampos-salvos';
   static const String vagas = '/vagas';
+  static const String editarPerfil = '/editarPerfil';
 
   static final List<GetPage> routes = [
     GetPage(
@@ -32,5 +34,6 @@ class AppRoutes {
     GetPage(name: mensagens, page: () => const MensagensPage()),
     GetPage(name: tramposSalvos, page: () => const SalvosPage()),
     GetPage(name: vagas, page: () => const VagasPage()),
+    GetPage(name: editarPerfil, page: () => const EditarPerfilPage()),
   ];
 }

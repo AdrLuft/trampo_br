@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/profile_controller.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/perfi_page/editar_perfil_page.dart';
 
 class PerfilPage extends StatefulWidget {
   const PerfilPage({super.key});
@@ -10,7 +11,7 @@ class PerfilPage extends StatefulWidget {
 }
 
 class _PerfilPageState extends State<PerfilPage> {
-  final controller = Get.find<ProfileController>();
+  final ProfileController controller = Get.find<ProfileController>();
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class _PerfilPageState extends State<PerfilPage> {
               color: Theme.of(context).colorScheme.onPrimary,
             ),
             onPressed: () {
-              // Ação de editar perfil
+              Get.toNamed('/editarPerfil');
             },
           ),
         ],
@@ -123,7 +124,7 @@ class _PerfilPageState extends State<PerfilPage> {
                             Icons.location_on,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          title: const Text('Localização'),
+                          title: const Text('Endereço'),
                           subtitle:
                               controller.user.value?.address != null
                                   ? Text(controller.user.value!.address ?? '')
