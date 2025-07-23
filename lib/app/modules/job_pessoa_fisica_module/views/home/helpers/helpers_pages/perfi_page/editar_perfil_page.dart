@@ -61,12 +61,18 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
   }
 
   void _showPhotoOptions() {
+    final user = _controller.user.value;
+    final hasProfileImage = user?.profileImageUrl?.isNotEmpty == true;
+
     Get.bottomSheet(
       Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+        decoration: BoxDecoration(
+          color:
+              Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade900
+                  : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -79,34 +85,53 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            const SizedBox(height: 25),
+            Text(
               'Opções de Foto',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF6366F1),
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 34),
             ListTile(
               leading: const Icon(Icons.camera_alt, color: Color(0xFF6366F1)),
-              title: const Text('Alterar Foto'),
+              title: Text(
+                hasProfileImage ? 'Alterar Foto' : 'Adicionar Foto',
+                style: const TextStyle(fontSize: 16),
+              ),
               onTap: () {
                 Get.back();
                 _controller.pickAndUploadProfileImage();
               },
             ),
-            if (_controller.user.value?.profileImageUrl?.isNotEmpty == true)
+            // Verifique se esta condição está sendo atendida
+            if (hasProfileImage) ...[
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 20),
+
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Remover Foto'),
+                title: const Text(
+                  'Remover Foto',
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
                 onTap: () {
                   Get.back();
                   _controller.removeProfileImage();
                 },
               ),
-            const SizedBox(height: 10),
+            ],
+            const SizedBox(height: 16),
           ],
         ),
       ),
       backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      isDismissible: true,
+      enableDrag: true,
     );
   }
 

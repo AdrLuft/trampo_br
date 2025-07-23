@@ -38,6 +38,8 @@ class CriarTrampoPageHelpers {
         return Icons.schedule;
       case 'Meio Período':
         return Icons.access_time;
+      case 'Outro':
+        return Icons.help_outline;
       default:
         return Icons.work_outline;
     }

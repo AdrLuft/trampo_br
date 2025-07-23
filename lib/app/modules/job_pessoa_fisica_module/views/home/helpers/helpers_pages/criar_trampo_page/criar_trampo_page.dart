@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_helpers/criar_trampo_page_helpers.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/criar_trampo_page/criar_trampo_helpers/criar_trampo_page_helpers.dart';
 
 class CriarPage extends StatefulWidget {
   const CriarPage({super.key});
@@ -40,6 +40,7 @@ class _CriarPageState extends State<CriarPage> {
     'Estágio',
     'Temporário',
     'Meio Período',
+    'Outro',
   ];
 
   final List<String> _modalidades = ['Presencial', 'Híbrido', 'Remoto'];

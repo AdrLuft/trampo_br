@@ -6,9 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widget.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/data/models/trampos_model.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/helpers/editar_minhas_vagas_page.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/helpers/vagas_pages_dialos/vagas_pages_dialogs.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhes_vagas_page.dart'
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/vagas_pages/helpers/editar_minhas_vagas_page.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/vagas_pages/helpers/vagas_pages_dialos/vagas_pages_dialogs.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/detalhes_vaga_page/detalhes_vagas_page.dart'
     as detalhes;
 
 class VagasPage extends StatefulWidget {
@@ -193,13 +193,30 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
           itemCount: _controller.minhasVagas.length,
           itemBuilder: (context, index) {
             final vaga = _controller.minhasVagas[index];
-            // Retorna um card clicável que abrirá a tela de edição
-            return GestureDetector(
-              onTap: () {
-                // Navegar para a tela de edição passando a vaga e seu ID
-                Get.to(() => _editarMinhasVagasPage);
-              },
-              child: VagasPagesDialogs.buildMinhaVagaCard(vaga, isDark),
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration:
+                  isDark
+                      ? null
+                      : BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+              child: GestureDetector(
+                onTap: () {
+                  // Navegar para a tela de edição passando a vaga e seu ID
+                  Get.to(() => _editarMinhasVagasPage);
+                },
+                child: VagasPagesDialogs.buildMinhaVagaCard(vaga, isDark),
+              ),
             );
           },
         ),
@@ -225,9 +242,23 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(15),
+          color:
+              isDark ? Colors.white.withAlpha(15) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withAlpha(38), width: 1.5),
+          border:
+              isDark
+                  ? Border.all(color: Colors.white.withAlpha(38), width: 1.5)
+                  : null,
+          boxShadow:
+              isDark
+                  ? null
+                  : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),

@@ -41,6 +41,7 @@ class UserRepositoryImp implements UserRepositoryAbstract {
         email: data['email'] ?? firebaseUser.email ?? '',
         phone: data['phone'] ?? firebaseUser.phoneNumber,
         address: data['address'],
+        profileImageUrl: data['profileImageUrl'],
       );
     }
 
@@ -54,11 +55,19 @@ class UserRepositoryImp implements UserRepositoryAbstract {
     if (firebaseUser == null) {
       throw Exception('Nenhum usuário autenticado para atualizar.');
     }
-    await _firestore.collection('users').doc(user.uid).update({
+
+    final updateData = <String, dynamic>{
       'name': user.name,
       'email': user.email,
       'phone': user.phone,
       'address': user.address,
-    });
+    };
+
+    // Só adiciona profileImageUrl se não for null
+    if (user.profileImageUrl != null) {
+      updateData['profileImageUrl'] = user.profileImageUrl;
+    }
+
+    await _firestore.collection('users').doc(user.uid).update(updateData);
   }
 }

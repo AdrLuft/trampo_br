@@ -8,11 +8,11 @@ import 'package:interprise_calendar/app/core/widgets/widgets_custom/status_widge
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/settings_view_controller_pessoa_fisica.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/dialogs_home_view_pessoa_fisica/home_view_page_dialog/dialogs_home_view_pessoa_fisica.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/criar_trampo_page/criar_trampo_page.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/detalhes_vaga_page/detalhes_vagas_page.dart'
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/criar_trampo_page/criar_trampo_page.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/detalhes_vaga_page/detalhes_vagas_page.dart'
     as detalhes;
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/trampos_salvos_page/salvos_page_helper.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/pages_for_homeview_pessoa_fisica/vagas_pages/vagas_page_helper.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/trampos_salvos_page/salvos_page_helper.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/vagas_pages/vagas_page_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeViewPessoaFisica extends StatefulWidget {
@@ -131,91 +131,147 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Avatar/Ícone
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          borderRadius: BorderRadius.circular(40),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(25),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 35,
-                          color: Theme.of(context).colorScheme.primary,
+                      // Avatar/Foto do perfil
+                      GestureDetector(
+                        onTap: () {
+                          // Permite alterar a foto diretamente do drawer
+                          controller.pickAndUploadProfileImage();
+                        },
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            borderRadius: BorderRadius.circular(40),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(40),
+                            child:
+                                controller.user.value?.profileImageUrl !=
+                                            null &&
+                                        controller
+                                            .user
+                                            .value!
+                                            .profileImageUrl!
+                                            .isNotEmpty
+                                    ? Image.network(
+                                      controller.user.value!.profileImageUrl!,
+                                      fit: BoxFit.cover,
+                                      width: 80,
+                                      height: 80,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return Icon(
+                                          Icons.person,
+                                          size: 35,
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                        );
+                                      },
+                                      loadingBuilder: (
+                                        context,
+                                        child,
+                                        loadingProgress,
+                                      ) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            value:
+                                                loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
+                                                    : null,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            strokeWidth: 2,
+                                          ),
+                                        );
+                                      },
+                                    )
+                                    : Icon(
+                                      Icons.person,
+                                      size: 35,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                          ),
                         ),
                       ),
+
                       const SizedBox(height: 12),
 
-                      // Nome e email com layout responsivo
-                      if (controller.user.value != null) ...[
-                        // NOME DO USUÁRIO
-                        Flexible(
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4.0,
-                            ),
-                            child: Text(
-                              controller.user.value!.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                      // Nome do usuário
+                      Text(
+                        controller.user.value?.name ?? 'Usuário',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: 6),
-                        // EMAIL DO USUÁRIO
-                        Flexible(
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4.0,
-                            ),
-                            child: Text(
-                              controller.user.value!.email,
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(200),
-                                fontSize: 11,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // Email do usuário
+                      Text(
+                        controller.user.value?.email ?? 'email@exemplo.com',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withAlpha(179),
                         ),
-                      ] else ...[
-                        // MENSAGEM DE ERRO/FALHA
-                        Flexible(
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4.0,
-                            ),
-                            child: Text(
-                              controller.errorMessage.value.isNotEmpty
-                                  ? 'Erro ao carregar'
-                                  : 'Usuário não encontrado',
-                              style: TextStyle(
-                                color: Colors.red[300],
-                                fontSize: 14,
+                      ),
+
+                      // Indicador de upload se estiver carregando
+                      if (controller.isUploadingPhoto.value) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(51),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Enviando...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -380,7 +436,6 @@ class _InicioPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      //color: Theme.of(context).colorScheme.onPrimary,
                       color: Colors.white,
                     ),
                   ),
@@ -388,13 +443,7 @@ class _InicioPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Encontre as melhores oportunidades de trabalho',
-                  style: TextStyle(
-                    fontSize: 16,
-                    // color: Theme.of(
-                    //   context,
-                    // ).colorScheme.onPrimary.withAlpha(179),
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ],
             ),

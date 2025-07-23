@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -25,18 +26,138 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Configurar captura global de erros relacionados ao Firebase Storage
+    _setupGlobalErrorHandling();
+
     loadUserData();
+
+    // Executar limpeza de URLs inválidas em background após carregamento
+    Future.delayed(const Duration(seconds: 2), () {
+      _cleanupInvalidStorageUrls();
+    });
+  }
+
+  /// Configura captura global de erros do Firebase Storage para evitar exceções não tratadas
+  void _setupGlobalErrorHandling() {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      final exception = details.exception;
+      if (exception.toString().contains('firebase_storage') &&
+          exception.toString().toLowerCase().contains('object-not-found')) {
+        debugPrint(
+          '✓ Erro Firebase Storage capturado globalmente e tratado: $exception',
+        );
+        return; // Não propagar o erro
+      }
+      // Para outros erros, usar o comportamento padrão
+      FlutterError.presentError(details);
+    };
   }
 
   Future<void> loadUserData() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      user.value = await _userRepository.getLoggedUser();
+      final userEntity = await _userRepository.getLoggedUser();
+
+      // Validar URL da imagem antes de salvar
+      if (userEntity.profileImageUrl != null &&
+          userEntity.profileImageUrl!.isNotEmpty) {
+        final isValidUrl = await _validateFirebaseStorageUrl(
+          userEntity.profileImageUrl!,
+        );
+        if (!isValidUrl) {
+          debugPrint(
+            'URL de imagem inválida detectada, removendo: ${userEntity.profileImageUrl}',
+          );
+          // Remove URL inválida do perfil
+          final cleanUser = userEntity.copyWith(profileImageUrl: '');
+          await _userRepository.updateUser(cleanUser);
+          user.value = cleanUser;
+        } else {
+          user.value = userEntity;
+        }
+      } else {
+        user.value = userEntity;
+      }
     } catch (e) {
+      debugPrint('Erro ao carregar dados do usuário: $e');
       MessageUtils.showDialogMessage('Erro ao carregar dados', e.toString());
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Valida se uma URL do Firebase Storage é válida e o arquivo existe
+  Future<bool> _validateFirebaseStorageUrl(String url) async {
+    try {
+      if (!url.contains('firebase') || !url.contains('firebasestorage')) {
+        debugPrint('URL não é do Firebase Storage: $url');
+        return false;
+      }
+
+      // Timeout curto para evitar demora desnecessária
+      final Reference ref = _storage.refFromURL(url);
+      await ref.getMetadata().timeout(
+        const Duration(seconds: 3),
+        onTimeout:
+            () =>
+                throw TimeoutException(
+                  'Timeout validando URL',
+                  const Duration(seconds: 3),
+                ),
+      );
+      debugPrint('URL do Firebase Storage válida: $url');
+      return true;
+    } on TimeoutException {
+      debugPrint('✓ Validação: Timeout ao validar URL: $url');
+      return false;
+    } on FirebaseException catch (e) {
+      // Tratar especificamente erros do Firebase - sem relançar erro
+      if (e.code == 'object-not-found') {
+        debugPrint('✓ Validação: Arquivo não encontrado (normal): $url');
+        return false;
+      } else {
+        debugPrint('✓ Validação: Erro Firebase (${e.code}): ${e.message}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('✓ Validação: Erro geral (tratado): $url - $e');
+      return false;
+    }
+  }
+
+  /// Executa limpeza de URLs inválidas do Firebase Storage em background
+  Future<void> _cleanupInvalidStorageUrls() async {
+    try {
+      if (user.value?.profileImageUrl == null ||
+          user.value!.profileImageUrl!.isEmpty) {
+        return;
+      }
+
+      final String currentUrl = user.value!.profileImageUrl!;
+
+      // Só valida URLs do Firebase Storage
+      if (!currentUrl.contains('firebase') ||
+          !currentUrl.contains('firebasestorage')) {
+        return;
+      }
+
+      debugPrint('Verificando URL de perfil em background: $currentUrl');
+
+      final bool isValid = await _validateFirebaseStorageUrl(currentUrl);
+
+      if (!isValid) {
+        debugPrint('URL inválida detectada, removendo automaticamente...');
+        // Remove silenciosamente a URL inválida
+        final cleanUser = user.value!.copyWith(profileImageUrl: '');
+        await _userRepository.updateUser(cleanUser);
+        user.value = cleanUser;
+        debugPrint('URL inválida removida automaticamente do perfil');
+      }
+    } catch (e) {
+      debugPrint('Erro durante limpeza de URLs (ignorado): $e');
+      // Ignora erros na limpeza para não afetar o funcionamento do app
     }
   }
 
@@ -73,12 +194,14 @@ class ProfileController extends GetxController {
 
   Future<void> pickAndUploadProfileImage() async {
     try {
-      // Mostrar opções para o usuário escolher
-      final ImageSource? source = await _showImageSourceDialog();
+      if (user.value == null) return;
+
+      final source = await _showImageSourceDialog();
       if (source == null) return;
 
-      // Selecionar imagem
-      final XFile? pickedFile = await _imagePicker.pickImage(
+      isUploadingPhoto.value = true;
+
+      final pickedFile = await _imagePicker.pickImage(
         source: source,
         maxWidth: 800,
         maxHeight: 800,
@@ -87,22 +210,20 @@ class ProfileController extends GetxController {
 
       if (pickedFile == null) return;
 
-      isUploadingPhoto.value = true;
+      final fileName =
+          'profile_${user.value!.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = _storage.ref('profile_images/$fileName');
+      await ref.putFile(File(pickedFile.path));
+      final url = await ref.getDownloadURL();
 
-      // Upload para Firebase Storage
-      final String downloadUrl = await _uploadImageToStorage(
-        File(pickedFile.path),
+      await _userRepository.updateUser(
+        user.value!.copyWith(profileImageUrl: url),
       );
+      await loadUserData();
 
-      // Atualizar usuário com nova URL da foto
-      await _updateUserProfileImage(downloadUrl);
-
-      MessageUtils.showDialogMessage(
-        'Sucesso',
-        'Foto de perfil atualizada com sucesso!',
-      );
+      MessageUtils.showDialogMessage('Sucesso', 'Foto atualizada!');
     } catch (e) {
-      MessageUtils.handleError(e, 'Erro ao atualizar foto');
+      MessageUtils.showDialogMessage('Erro', 'Falha no upload: $e');
     } finally {
       isUploadingPhoto.value = false;
     }
@@ -141,55 +262,27 @@ class ProfileController extends GetxController {
     );
   }
 
-  Future<String> _uploadImageToStorage(File imageFile) async {
-    if (user.value == null) throw Exception('Usuário não encontrado');
-
-    final String fileName =
-        'profile_${user.value!.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final Reference storageRef = _storage.ref().child(
-      'profile_images/$fileName',
-    );
-
-    final UploadTask uploadTask = storageRef.putFile(imageFile);
-    final TaskSnapshot taskSnapshot = await uploadTask;
-
-    return await taskSnapshot.ref.getDownloadURL();
-  }
-
-  Future<void> _updateUserProfileImage(String imageUrl) async {
-    if (user.value == null) return;
-
-    final updatedUser = user.value!.copyWith(profileImageUrl: imageUrl);
-    await _userRepository.updateUser(updatedUser);
-    await loadUserData(); // Recarregar dados para atualizar a UI
-  }
-
   Future<void> removeProfileImage() async {
     try {
       isUploadingPhoto.value = true;
 
       if (user.value?.profileImageUrl != null &&
-          user.value!.profileImageUrl!.isNotEmpty) {
-        // Remover do Storage se existir
+          user.value!.profileImageUrl!.contains('firebase')) {
         try {
-          final Reference storageRef = _storage.refFromURL(
-            user.value!.profileImageUrl!,
-          );
-          await storageRef.delete();
+          await _storage.refFromURL(user.value!.profileImageUrl!).delete();
         } catch (e) {
-          // Ignorar erro se a imagem não existir no storage
+          // Ignora erro ao deletar
         }
       }
 
-      // Atualizar usuário removendo a URL da foto
-      await _updateUserProfileImage('');
-
-      MessageUtils.showDialogMessage(
-        'Sucesso',
-        'Foto de perfil removida com sucesso!',
+      await _userRepository.updateUser(
+        user.value!.copyWith(profileImageUrl: ''),
       );
+      await loadUserData();
+
+      MessageUtils.showDialogMessage('Sucesso', 'Foto removida!');
     } catch (e) {
-      MessageUtils.handleError(e, 'Erro ao remover foto');
+      MessageUtils.showDialogMessage('Erro', 'Falha ao remover: $e');
     } finally {
       isUploadingPhoto.value = false;
     }
