@@ -36,7 +36,7 @@ class AppTheme {
         ),
       ),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -86,14 +86,14 @@ class AppTheme {
         labelStyle: TextStyle(color: Colors.grey[300]),
       ),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withAlpha(05), width: 1.5),
+          side: BorderSide(color: Colors.white.withAlpha(5), width: 1.5),
         ),
-        color: Colors.white.withAlpha(06),
-        shadowColor: Colors.black.withAlpha(03),
+        color: Colors.white.withAlpha(6),
+        shadowColor: Colors.black.withAlpha(3),
       ),
 
       scaffoldBackgroundColor: Colors.black,

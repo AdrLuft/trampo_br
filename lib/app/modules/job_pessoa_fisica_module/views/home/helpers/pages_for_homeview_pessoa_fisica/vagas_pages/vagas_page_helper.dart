@@ -88,7 +88,8 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
             child: TabBar(
               controller: _tabController,
               labelColor: const Color(0xFF6366F1),
-              unselectedLabelColor: Colors.white.withAlpha(153),
+              unselectedLabelColor:
+                  isDark ? Colors.white.withAlpha(153) : Colors.grey.shade600,
               indicatorColor: const Color(0xFF6366F1),
               indicatorWeight: 3,
               labelStyle: const TextStyle(

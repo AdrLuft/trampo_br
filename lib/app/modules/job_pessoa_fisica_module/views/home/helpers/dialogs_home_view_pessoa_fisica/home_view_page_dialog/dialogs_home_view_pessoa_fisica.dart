@@ -69,6 +69,7 @@ class DialogsHomeViewPessoaFisica {
     );
   }
 
+  //*******************************************************************************************************************  */
   static void showDeleteAccountDialog() {
     Get.dialog(
       AlertDialog(
@@ -105,6 +106,7 @@ class DialogsHomeViewPessoaFisica {
       ),
     );
   }
+  //*******************************************************************************************************************  */
 
   static void showChangePasswordDialog() {
     Get.dialog(const _ChangePasswordDialog(), barrierDismissible: false);
@@ -121,6 +123,7 @@ class _ResetPasswordDialog extends StatefulWidget {
   @override
   State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
 }
+//*******************************************************************************************************************  */
 
 class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
   late final TextEditingController _emailController;
@@ -287,6 +290,7 @@ class _ChangePasswordDialog extends StatefulWidget {
   @override
   State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
 }
+//*******************************************************************************************************************  */
 
 class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   late final TextEditingController _currentPasswordController;
@@ -396,6 +400,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
     }
   }
 
+  //*******************************************************************************************************************  */
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
