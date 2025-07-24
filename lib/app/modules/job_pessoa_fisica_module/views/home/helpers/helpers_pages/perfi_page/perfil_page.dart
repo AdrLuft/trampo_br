@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/profile_controller.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/perfi_page/editar_perfil_page.dart';
 
 class PerfilPage extends StatefulWidget {
   const PerfilPage({super.key});
@@ -17,14 +16,12 @@ class _PerfilPageState extends State<PerfilPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF6366F1),
         title: Text(
           'Meu Perfil',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        // backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
@@ -95,6 +92,18 @@ class _PerfilPageState extends State<PerfilPage> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
+                        ListTile(
+                          leading: Icon(
+                            Icons.person,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: const Text('Nome'),
+                          subtitle:
+                              controller.user.value?.name != null
+                                  ? Text(controller.user.value!.name)
+                                  : const Text('Nome não disponível'),
+                        ),
+
                         ListTile(
                           leading: Icon(
                             Icons.email,

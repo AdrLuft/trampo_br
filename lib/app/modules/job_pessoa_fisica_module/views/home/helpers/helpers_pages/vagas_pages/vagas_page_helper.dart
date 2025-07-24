@@ -10,6 +10,7 @@ import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/h
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/vagas_pages/helpers/vagas_pages_dialos/vagas_pages_dialogs.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/detalhes_vaga_page/detalhes_vagas_page.dart'
     as detalhes;
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/view/home_view_pessoa_fisica_helpers.dart';
 
 class VagasPage extends StatefulWidget {
   const VagasPage({super.key});
@@ -27,6 +28,10 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
     onSave: () {},
   );
 
+  // Controladores para busca
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +41,7 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -128,45 +134,252 @@ class _VagasPageState extends State<VagasPage> with TickerProviderStateMixin {
   }
 
   Widget _buildTodasVagasTab(bool isDark) {
-    return StreamBuilder<QuerySnapshot>(
-      stream:
-          FirebaseFirestore.instance
-              .collection('Trampos')
-              .orderBy('createDate', descending: true)
-              .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF6366F1)),
-          );
-        }
+    return Column(
+      children: [
+        // Barra de busca
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: _buildSimpleSearchBar(isDark),
+        ),
 
-        if (snapshot.hasError) {
-          return VagasPagesDialogs.buildEmptyState(
-            'Erro ao carregar vagas',
-            'Tente novamente mais tarde',
-            Icons.error,
-          );
-        }
+        // Lista de vagas com busca
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream:
+                FirebaseFirestore.instance
+                    .collection('Trampos')
+                    .orderBy('createDate', descending: true)
+                    .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+                );
+              }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return VagasPagesDialogs.buildEmptyState(
-            'Nenhuma vaga disponível',
-            'Quando houver vagas publicadas, elas aparecerão aqui',
-            Icons.work_off,
-          );
-        }
+              if (snapshot.hasError) {
+                return VagasPagesDialogs.buildEmptyState(
+                  'Erro ao carregar vagas',
+                  'Tente novamente mais tarde',
+                  Icons.error,
+                );
+              }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            final doc = snapshot.data!.docs[index];
-            final data = doc.data() as Map<String, dynamic>;
-            return _buildVagaCard(data, isDark, false, doc.id);
-          },
-        );
-      },
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return VagasPagesDialogs.buildEmptyState(
+                  'Nenhuma vaga disponível',
+                  'Quando houver vagas publicadas, elas aparecerão aqui',
+                  Icons.work_off,
+                );
+              }
+
+              // Filtrar vagas com base na busca
+              final filteredDocs =
+                  _searchQuery.isEmpty
+                      ? snapshot.data!.docs
+                      : snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final titulo =
+                            data['titulo']?.toString().toLowerCase() ?? '';
+                        final descricao =
+                            data['descricao']?.toString().toLowerCase() ?? '';
+                        final tipoVaga =
+                            data['tipoVaga']?.toString().toLowerCase() ?? '';
+                        final local =
+                            data['local']?.toString().toLowerCase() ?? '';
+
+                        return titulo.contains(_searchQuery) ||
+                            descricao.contains(_searchQuery) ||
+                            tipoVaga.contains(_searchQuery) ||
+                            local.contains(_searchQuery);
+                      }).toList();
+
+              if (filteredDocs.isEmpty && _searchQuery.isNotEmpty) {
+                return _buildNoResultsFound(isDark);
+              }
+
+              return Column(
+                children: [
+                  // Contador de resultados
+                  if (_searchQuery.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${filteredDocs.length} vaga${filteredDocs.length != 1 ? 's' : ''} encontrada${filteredDocs.length != 1 ? 's' : ''}',
+                            style: TextStyle(
+                              color:
+                                  isDark
+                                      ? Colors.white70
+                                      : Colors.grey.shade600,
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              HomeViewPessoaFisicaHelpers.showBuscaAvancada();
+                            },
+                            icon: const Icon(Icons.tune, size: 16),
+                            label: const Text('Filtros'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF6366F1),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Lista filtrada
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredDocs.length,
+                      itemBuilder: (context, index) {
+                        final doc = filteredDocs[index];
+                        final data = doc.data() as Map<String, dynamic>;
+                        return _buildVagaCard(data, isDark, false, doc.id);
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSimpleSearchBar(bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withAlpha(15) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border:
+            isDark
+                ? Border.all(color: Colors.white.withAlpha(38), width: 1.5)
+                : null,
+        boxShadow:
+            isDark
+                ? null
+                : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value.toLowerCase();
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Buscar vagas...',
+          hintStyle: TextStyle(
+            color: isDark ? Colors.white60 : Colors.grey.shade600,
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: isDark ? Colors.white70 : Colors.grey.shade600,
+          ),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_searchQuery.isNotEmpty)
+                IconButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                  icon: Icon(
+                    Icons.clear,
+                    color: isDark ? Colors.white70 : Colors.grey.shade600,
+                  ),
+                ),
+              IconButton(
+                onPressed: () {
+                  HomeViewPessoaFisicaHelpers.showBuscaAvancada();
+                },
+                icon: Icon(Icons.tune, color: const Color(0xFF6366F1)),
+                tooltip: 'Busca Avançada',
+              ),
+            ],
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsFound(bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 60,
+              color:
+                  isDark
+                      ? Colors.white.withAlpha(179)
+                      : Theme.of(context).colorScheme.onSurface.withAlpha(153),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Nenhuma vaga encontrada',
+              style: TextStyle(
+                color:
+                    isDark
+                        ? Colors.white.withAlpha(230)
+                        : Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Tente usar palavras diferentes ou use a busca avançada',
+              style: TextStyle(
+                color:
+                    isDark
+                        ? Colors.white.withAlpha(179)
+                        : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(153),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                HomeViewPessoaFisicaHelpers.showBuscaAvancada();
+              },
+              icon: const Icon(Icons.tune),
+              label: const Text('Busca Avançada'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

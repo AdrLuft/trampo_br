@@ -166,7 +166,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
   Widget _buildAppBar(bool isDark) {
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 50,
       floating: false,
       pinned: true,
       backgroundColor: const Color(0xFF6366F1),
@@ -179,6 +179,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           'Editar Perfil',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        centerTitle: true,
+        titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
