@@ -46,19 +46,7 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Trampos BR'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              HomeViewPessoaFisicaHelpers.showBuscaAvancada();
-            },
-            tooltip: 'Busca Avançada',
-          ),
-          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Trampos BR')),
       drawer: _buildDrawer(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -387,7 +375,6 @@ class _HomeViewState extends State<HomeViewPessoaFisica> {
   }
 }
 
-// Página de Início com busca simples
 class _InicioPage extends StatefulWidget {
   final Function(int) onNavigateToTab;
   final TramposController controller;
@@ -412,80 +399,82 @@ class __InicioPageState extends State<_InicioPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Card de boas-vindas
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF6366F1).withAlpha(204),
-                  const Color(0xFF6366F1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
+          child: _buildSimpleSearchBar(isDark),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Container de boas-vindas
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF6366F1).withAlpha(204),
+                        const Color(0xFF6366F1),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          'Bem-vindo!',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'Encontre as melhores oportunidades de trabalho',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 9),
+
                 Center(
                   child: Text(
-                    'Bem-vindo!',
+                    _searchQuery.isNotEmpty
+                        ? 'Resultados da busca'
+                        : 'Trampos Recentes',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
-                //   const SizedBox(height: 8),
-                Text(
-                  'Encontre as melhores oportunidades de trabalho',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
+                const SizedBox(height: 6),
+                _buildTramposList(isDark),
               ],
             ),
           ),
-
-          const SizedBox(height: 14),
-
-          // Barra de busca simples
-          _buildSimpleSearchBar(isDark),
-
-          const SizedBox(height: 14),
-
-          Center(
-            child: Text(
-              _searchQuery.isNotEmpty
-                  ? 'Resultados da busca'
-                  : 'Trampos Recentes',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Lista de Trampos do Firebase com busca simples
-          _buildTramposList(isDark),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
