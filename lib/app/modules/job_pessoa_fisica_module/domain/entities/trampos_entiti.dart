@@ -17,6 +17,7 @@ class TramposEntiti {
   final List<String> exigencias;
   final List<String> valorizados;
   final List<String> beneficios;
+  final String? categoria;
 
   TramposEntiti({
     required this.id,
@@ -37,5 +38,6 @@ class TramposEntiti {
     this.exigencias = const [],
     this.valorizados = const [],
     this.beneficios = const [],
+    this.categoria,
   });
 }

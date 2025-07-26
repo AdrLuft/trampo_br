@@ -30,6 +30,7 @@ class _CriarPageState extends State<CriarPage> {
 
   String? _tipoVagaSelecionado;
   String? _modalidadeSelecionada;
+  String? _categoriaSelecionada;
   bool _salarioACombinar = false;
 
   final List<String> _tiposVaga = [
@@ -40,6 +41,21 @@ class _CriarPageState extends State<CriarPage> {
     'Estágio',
     'Temporário',
     'Meio Período',
+    'Outro',
+  ];
+
+  final List<String> _categorias = [
+    'Tecnologia',
+    'Design',
+    'Marketing',
+    'Vendas',
+    'Administrativo',
+    'Educação',
+    'Saúde',
+    'Construção',
+    'Alimentação',
+    'Transporte',
+    'Serviços Gerais',
     'Outro',
   ];
 
@@ -291,6 +307,58 @@ class _CriarPageState extends State<CriarPage> {
                     onChanged: (String? novoTipo) {
                       setState(() {
                         _tipoVagaSelecionado = novoTipo;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: Text(
+                  'Categoria da Vaga',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: DropdownButton<String>(
+                    value: _categoriaSelecionada,
+                    hint: const Text('Selecione a categoria'),
+                    isExpanded: true,
+                    icon: const Icon(Icons.arrow_drop_down),
+                    items:
+                        _categorias.map((String categoria) {
+                          return DropdownMenuItem<String>(
+                            value: categoria,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  CriarTrampoPageHelpers.getIconForCategoria(
+                                    categoria,
+                                  ),
+                                  size: 20,
+                                  color: const Color(0xFF6366F1),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(categoria),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                    onChanged: (String? novaCategoria) {
+                      setState(() {
+                        _categoriaSelecionada = novaCategoria;
                       });
                     },
                   ),
@@ -684,7 +752,7 @@ class _CriarPageState extends State<CriarPage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6366F1),
+                          color: Color(0xFF6366F1),
                         ),
                       ),
                     ),
@@ -709,6 +777,8 @@ class _CriarPageState extends State<CriarPage> {
                                   if (_formKey.currentState!.validate() &&
                                       _tipoVagaSelecionado != null) {
                                     await _tramposController.createTrampo(
+                                      categoria:
+                                          _categoriaSelecionada ?? 'Outro',
                                       descricao: _descricaoController.text,
                                       tipoVaga: _tipoVagaSelecionado!,
                                       telefone: _telefoneController.text,
@@ -738,14 +808,13 @@ class _CriarPageState extends State<CriarPage> {
                                     _limparFormulario();
 
                                     // Show success message
+                                    // ignore: use_build_context_synchronously
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
                                           'Trampo criado com sucesso!',
                                         ),
-                                        backgroundColor: const Color(
-                                          0xFF6366F1,
-                                        ),
+                                        backgroundColor: Color(0xFF6366F1),
                                         duration: Duration(seconds: 2),
                                       ),
                                     );

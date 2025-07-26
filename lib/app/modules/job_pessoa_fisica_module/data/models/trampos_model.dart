@@ -20,6 +20,7 @@ class CreateTramposModel {
   final List<String> exigencias;
   final List<String> valorizados;
   final List<String> beneficios;
+  final String? categoria;
 
   CreateTramposModel({
     required this.id,
@@ -40,6 +41,7 @@ class CreateTramposModel {
     this.exigencias = const [],
     this.valorizados = const [],
     this.beneficios = const [],
+    required this.categoria,
   });
 
   factory CreateTramposModel.fromJson(Map<String, dynamic> json) {
@@ -68,6 +70,7 @@ class CreateTramposModel {
       exigencias: List<String>.from(json['exigencias'] ?? []),
       valorizados: List<String>.from(json['valorizados'] ?? []),
       beneficios: List<String>.from(json['beneficios'] ?? []),
+      categoria: json['categoria'] as String? ?? '',
     );
   }
 
@@ -90,6 +93,7 @@ class CreateTramposModel {
       'modalidade': modalidade,
       'salarioACombinar': salarioACombinar,
       'salario': salarioACombinar ? 'A combinar' : salario,
+      'categoria': categoria,
     };
   }
 
@@ -112,6 +116,7 @@ class CreateTramposModel {
     List<String>? exigencias,
     List<String>? valorizados,
     List<String>? beneficios,
+    String? categoria,
   }) {
     return CreateTramposModel(
       id: id ?? this.id,
@@ -132,6 +137,7 @@ class CreateTramposModel {
       exigencias: exigencias ?? this.exigencias,
       valorizados: valorizados ?? this.valorizados,
       beneficios: beneficios ?? this.beneficios,
+      categoria: categoria ?? this.categoria,
     );
   }
 
@@ -155,6 +161,7 @@ class CreateTramposModel {
       exigencias: entity.exigencias,
       valorizados: entity.valorizados,
       beneficios: entity.beneficios,
+      categoria: entity.categoria ?? '',
     );
   }
   TramposEntiti toEntity() => TramposEntiti(
@@ -176,5 +183,6 @@ class CreateTramposModel {
     exigencias: exigencias,
     valorizados: valorizados,
     beneficios: beneficios,
+    categoria: categoria,
   );
 }

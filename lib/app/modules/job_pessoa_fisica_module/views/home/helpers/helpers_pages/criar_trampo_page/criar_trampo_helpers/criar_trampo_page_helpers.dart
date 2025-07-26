@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 class CriarTrampoPageHelpers {
-  // Widget para exibir os chips/tags adicionados
-  // Widget para exibir os chips/tags adicionados
   static Widget buildChips(List<String> itens, Function(int) onDelete) {
     return Wrap(
       spacing: 8.0,
@@ -42,6 +40,35 @@ class CriarTrampoPageHelpers {
         return Icons.help_outline;
       default:
         return Icons.work_outline;
+    }
+  }
+
+  static IconData getIconForCategoria(String categoria) {
+    switch (categoria) {
+      case 'Tecnologia':
+        return Icons.computer;
+      case 'Design':
+        return Icons.palette;
+      case 'Marketing':
+        return Icons.campaign;
+      case 'Vendas':
+        return Icons.attach_money;
+      case 'Administrativo':
+        return Icons.business;
+      case 'Educação':
+        return Icons.school;
+      case 'Saúde':
+        return Icons.local_hospital;
+      case 'Construção':
+        return Icons.construction;
+      case 'Alimentação':
+        return Icons.restaurant;
+      case 'Transporte':
+        return Icons.local_shipping;
+      case 'Serviços Gerais':
+        return Icons.cleaning_services;
+      default:
+        return Icons.work;
     }
   }
 

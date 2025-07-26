@@ -33,6 +33,7 @@ class TramposController extends GetxController {
   }
 
   Future<void> createTrampo({
+    required String categoria,
     required String descricao,
     required String tipoVaga,
     required String telefone,
@@ -67,6 +68,7 @@ class TramposController extends GetxController {
         exigencias: exigencias.toList(),
         valorizados: valorizados.toList(),
         beneficios: beneficios.toList(),
+        categoria: categoria,
       );
       // 2. Chama o repositório com a entidade pronta.
       await _repository.createTrampo(novoTrampo);
