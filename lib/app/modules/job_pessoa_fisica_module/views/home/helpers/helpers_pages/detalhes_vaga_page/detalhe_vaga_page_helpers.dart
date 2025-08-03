@@ -185,4 +185,114 @@ class DetalheVagaPageHelpers {
       ),
     );
   }
+
+  static String formatarData(dynamic createDate) {
+    try {
+      DateTime data;
+
+      if (createDate == null) {
+        return 'Data não disponível';
+      }
+
+      // Se for um Timestamp do Firebase
+      if (createDate.runtimeType.toString().contains('Timestamp')) {
+        data = createDate.toDate();
+      }
+      // Se for uma String
+      else if (createDate is String) {
+        // Tenta diferentes formatos de string
+        try {
+          data = DateTime.parse(createDate);
+        } catch (e) {
+          // Se falhar, tenta outros formatos comuns
+          try {
+            data = DateTime.tryParse(createDate) ?? DateTime.now();
+          } catch (e2) {
+            return 'Data não disponível';
+          }
+        }
+      }
+      // Se for um int (timestamp em milliseconds)
+      else if (createDate is int) {
+        data = DateTime.fromMillisecondsSinceEpoch(createDate);
+      }
+      // Se for um Map (possível estrutura do Firebase)
+      else if (createDate is Map) {
+        if (createDate.containsKey('seconds')) {
+          data = DateTime.fromMillisecondsSinceEpoch(
+            createDate['seconds'] * 1000 +
+                (createDate['nanoseconds'] ?? 0) ~/ 1000000,
+          );
+        } else {
+          return 'Data não disponível';
+        }
+      }
+      // Se já for DateTime
+      else if (createDate is DateTime) {
+        data = createDate;
+      } else {
+        return 'Data não disponível';
+      }
+
+      final agora = DateTime.now();
+      agora.difference(data);
+
+      // Ajustar para timezone local se necessário
+      final dataLocal = data.toLocal();
+      final agoraLocal = agora.toLocal();
+      final diferencaLocal = agoraLocal.difference(dataLocal);
+
+      if (diferencaLocal.inDays == 0) return 'Hoje';
+      if (diferencaLocal.inDays == 1) return 'Ontem';
+      if (diferencaLocal.inDays < 7) {
+        return '${diferencaLocal.inDays} dias atrás';
+      }
+      return '${dataLocal.day.toString().padLeft(2, '0')}/${dataLocal.month.toString().padLeft(2, '0')}/${dataLocal.year}';
+    } catch (e) {
+      return 'Data não disponível';
+    }
+  }
+
+  static IconData getModalidadeIcon(String modalidade) {
+    switch (modalidade.toLowerCase()) {
+      case 'presencial':
+        return Icons.business_center;
+      case 'remoto':
+        return Icons.computer;
+      case 'híbrido':
+      case 'hibrido':
+        return Icons.home_work;
+      default:
+        return Icons.work_outline;
+    }
+  }
+
+  static IconData getCategoriaIcon(String categoria) {
+    switch (categoria) {
+      case 'Tecnologia':
+        return Icons.computer;
+      case 'Design':
+        return Icons.palette;
+      case 'Marketing':
+        return Icons.campaign;
+      case 'Vendas':
+        return Icons.attach_money;
+      case 'Administrativo':
+        return Icons.business;
+      case 'Educação':
+        return Icons.school;
+      case 'Saúde':
+        return Icons.local_hospital;
+      case 'Construção':
+        return Icons.construction;
+      case 'Alimentação':
+        return Icons.restaurant;
+      case 'Transporte':
+        return Icons.local_shipping;
+      case 'Serviços Gerais':
+        return Icons.cleaning_services;
+      default:
+        return Icons.work;
+    }
+  }
 }

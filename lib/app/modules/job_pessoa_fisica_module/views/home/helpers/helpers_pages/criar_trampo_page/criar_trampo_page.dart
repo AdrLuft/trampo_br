@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/presentations/controllers/trampos_controller.dart';
-import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/criar_trampo_page/criar_trampo_helpers/criar_trampo_page_helpers.dart';
+import 'package:interprise_calendar/app/modules/job_pessoa_fisica_module/views/home/helpers/helpers_pages/criar_trampo_page/criar_trampo_page_helpers.dart';
 
 class CriarPage extends StatefulWidget {
   const CriarPage({super.key});
@@ -332,39 +332,40 @@ class _CriarPageState extends State<CriarPage> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: DropdownButton<String>(
-                    value: _categoriaSelecionada,
-                    hint: const Text('Selecione a categoria'),
-                    isExpanded: true,
-                    icon: const Icon(Icons.arrow_drop_down),
-                    items:
-                        _categorias.map((String categoria) {
-                          return DropdownMenuItem<String>(
-                            value: categoria,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  CriarTrampoPageHelpers.getIconForCategoria(
-                                    categoria,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _categoriaSelecionada,
+                      hint: const Text('Selecione a categoria'),
+                      isExpanded: true,
+                      icon: const Icon(Icons.arrow_drop_down),
+                      items:
+                          _categorias.map((String categoria) {
+                            return DropdownMenuItem<String>(
+                              value: categoria,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    CriarTrampoPageHelpers.getIconForCategoria(
+                                      categoria,
+                                    ),
+                                    size: 20,
+                                    color: const Color(0xFF6366F1),
                                   ),
-                                  size: 20,
-                                  color: const Color(0xFF6366F1),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(categoria),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                    onChanged: (String? novaCategoria) {
-                      setState(() {
-                        _categoriaSelecionada = novaCategoria;
-                      });
-                    },
+                                  const SizedBox(width: 8),
+                                  Text(categoria),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                      onChanged: (String? novaCategoria) {
+                        setState(() {
+                          _categoriaSelecionada = novaCategoria;
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
               Center(
                 child: Text(
@@ -483,10 +484,7 @@ class _CriarPageState extends State<CriarPage> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.attach_money,
-                              color: const Color(0xFF6366F1),
-                            ),
+                            Icon(Icons.attach_money, color: Color(0xFF6366F1)),
                             SizedBox(width: 4),
                             Text(
                               'R\$',

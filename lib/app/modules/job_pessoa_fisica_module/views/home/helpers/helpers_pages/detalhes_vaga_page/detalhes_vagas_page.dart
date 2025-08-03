@@ -108,73 +108,6 @@ ${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
     }
   }
 
-  String _formatarData(dynamic createDate) {
-    try {
-      DateTime data;
-
-      if (createDate == null) {
-        return 'Data não disponível';
-      }
-
-      // Se for um Timestamp do Firebase
-      if (createDate.runtimeType.toString().contains('Timestamp')) {
-        data = createDate.toDate();
-      }
-      // Se for uma String
-      else if (createDate is String) {
-        // Tenta diferentes formatos de string
-        try {
-          data = DateTime.parse(createDate);
-        } catch (e) {
-          // Se falhar, tenta outros formatos comuns
-          try {
-            data = DateTime.tryParse(createDate) ?? DateTime.now();
-          } catch (e2) {
-            return 'Data não disponível';
-          }
-        }
-      }
-      // Se for um int (timestamp em milliseconds)
-      else if (createDate is int) {
-        data = DateTime.fromMillisecondsSinceEpoch(createDate);
-      }
-      // Se for um Map (possível estrutura do Firebase)
-      else if (createDate is Map) {
-        if (createDate.containsKey('seconds')) {
-          data = DateTime.fromMillisecondsSinceEpoch(
-            createDate['seconds'] * 1000 +
-                (createDate['nanoseconds'] ?? 0) ~/ 1000000,
-          );
-        } else {
-          return 'Data não disponível';
-        }
-      }
-      // Se já for DateTime
-      else if (createDate is DateTime) {
-        data = createDate;
-      } else {
-        return 'Data não disponível';
-      }
-
-      final agora = DateTime.now();
-      agora.difference(data);
-
-      // Ajustar para timezone local se necessário
-      final dataLocal = data.toLocal();
-      final agoraLocal = agora.toLocal();
-      final diferencaLocal = agoraLocal.difference(dataLocal);
-
-      if (diferencaLocal.inDays == 0) return 'Hoje';
-      if (diferencaLocal.inDays == 1) return 'Ontem';
-      if (diferencaLocal.inDays < 7) {
-        return '${diferencaLocal.inDays} dias atrás';
-      }
-      return '${dataLocal.day.toString().padLeft(2, '0')}/${dataLocal.month.toString().padLeft(2, '0')}/${dataLocal.year}';
-    } catch (e) {
-      return 'Data não disponível';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -183,6 +116,8 @@ ${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
     final String titulo = widget.vagaData['titulo'] as String? ?? '';
     final String modalidade =
         widget.vagaData['modalidade'] as String? ?? 'Não especificada';
+    final String categoria =
+        widget.vagaData['categoria'] as String? ?? 'Não especificada';
     final String salario =
         widget.vagaData['salario'] as String? ?? 'Não informado';
     final String telefone = widget.vagaData['telefone']?.toString() ?? '';
@@ -294,7 +229,13 @@ ${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
                   DetalheVagaPageHelpers.buildInfoRow(
                     'Modalidade',
                     modalidade,
-                    _getModalidadeIcon(modalidade),
+                    DetalheVagaPageHelpers.getModalidadeIcon(modalidade),
+                    isDark,
+                  ),
+                  DetalheVagaPageHelpers.buildInfoRow(
+                    'Categoria',
+                    categoria,
+                    DetalheVagaPageHelpers.getCategoriaIcon(categoria),
                     isDark,
                   ),
                   DetalheVagaPageHelpers.buildInfoRow(
@@ -305,7 +246,9 @@ ${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
                   ),
                   DetalheVagaPageHelpers.buildInfoRow(
                     'Data de Publicação',
-                    _formatarData(widget.vagaData['createDate']),
+                    DetalheVagaPageHelpers.formatarData(
+                      widget.vagaData['createDate'],
+                    ),
                     Icons.calendar_today,
                     isDark,
                   ),
@@ -714,21 +657,6 @@ ${descricao.isNotEmpty ? descricao : 'Sem descrição disponível'}
         ),
       ),
     );
-  }
-
-  // Método para obter ícone baseado na modalidade
-  IconData _getModalidadeIcon(String modalidade) {
-    switch (modalidade.toLowerCase()) {
-      case 'presencial':
-        return Icons.business_center;
-      case 'remoto':
-        return Icons.computer;
-      case 'híbrido':
-      case 'hibrido':
-        return Icons.home_work;
-      default:
-        return Icons.work_outline;
-    }
   }
 
   Widget _buildSection(
